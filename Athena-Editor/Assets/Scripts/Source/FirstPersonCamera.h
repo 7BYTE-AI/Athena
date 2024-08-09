@@ -7,7 +7,7 @@ using namespace Athena;
 
 namespace Sandbox
 {
-	class FirstPersonCamera: public Script
+	class FirstPersonCamera : public Script
 	{
 	public:
 		FirstPersonCamera();

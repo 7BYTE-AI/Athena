@@ -30,6 +30,8 @@ EXPORTS
 	?DragFloat3@ImGui@@YA_NPEBDQEAMMMM0H@Z
 	?DragFloat4@ImGui@@YA_NPEBDQEAMMMM0H@Z
 	?DragInt@ImGui@@YA_NPEBDPEAHMHH0H@Z
+	?DragScalar@ImGui@@YA_NPEBDHPEAXMPEBX20H@Z
+	?DragScalarN@ImGui@@YA_NPEBDHPEAXHMPEBX20H@Z
 	?End@ImGui@@YAXXZ
 	?EndGroup@ImGui@@YAXXZ
 	?EndTabBar@ImGui@@YAXXZ
@@ -43,6 +45,7 @@ EXPORTS
 	?Indent@ImGui@@YAXM@Z
 	?InputText@ImGui@@YA_NPEBDPEAD_KHP6AHPEAUImGuiInputTextCallbackData@@@ZPEAX@Z
 	?InputTextMultiline@ImGui@@YA_NPEBDPEAD_KAEBUImVec2@@HP6AHPEAUImGuiInputTextCallbackData@@@ZPEAX@Z
+	?InputScalar@ImGui@@YA_NPEBDHPEAXPEBX20H@Z
 	?InvisibleButton@ImGui@@YA_NPEBDAEBUImVec2@@H@Z
 	?IsAnyItemActive@ImGui@@YA_NXZ
 	?IsItemClicked@ImGui@@YA_NH@Z

@@ -20,7 +20,32 @@
 
 namespace Athena
 {
-	void DrawVec3Property(std::string_view label, Vector3& values, float defaultValues)
+#define SCRIPT_FIELD_SCALAR_INPUT(nativeType, fieldType, imguiType)	\
+	case ScriptFieldType::fieldType:	\
+	{	\
+		nativeType data = field.GetValue<nativeType>();  \
+		UI::PropertyRow(name.data(), ImGui::GetFrameHeight());  \
+		ImGui::PushID(name.data());  \
+		if (ImGui::DragScalar("##InputScalar", imguiType, &data))  \
+			field.SetValue(data);  \
+		ImGui::PopID();  \
+		break;  \
+	}
+
+#define SCRIPT_FIELD_SCALAR_INPUT_N(type, components)	\
+	case ScriptFieldType::type:	\
+	{	\
+		type data = field.GetValue<type>();  \
+		UI::PropertyRow(name.data(), ImGui::GetFrameHeight());  \
+		ImGui::PushID(name.data());  \
+		if (ImGui::DragScalarN("##InputScalar", ImGuiDataType_Float, data.Data(), components))  \
+			field.SetValue(data);  \
+		ImGui::PopID();  \
+		break;  \
+	}
+
+
+	static void DrawVec3Property(std::string_view label, Vector3& values, float defaultValues)
 	{
 		UI::PropertyRow(label, ImGui::GetFrameHeight());
 
@@ -136,12 +161,29 @@ namespace Athena
 		ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
 
 		const auto& view = m_EditorCtx.ActiveScene->GetAllEntitiesWith<IDComponent>();
-		for (auto entt : view)
+
+		// When scene state changes to Play or Simulate, scene is copied, which leads
+		// to reversed order of entities, to "prevent" this we iterate entities in reversed order
+		if (m_EditorCtx.SceneState == SceneState::Edit)
 		{
-			Entity entity = Entity(entt, m_EditorCtx.ActiveScene.Raw());
-			if (!entity.HasComponent<ParentComponent>())
+			for (auto entt : view)
 			{
-				DrawEntityNode(entity);
+				Entity entity = Entity(entt, m_EditorCtx.ActiveScene.Raw());
+				if (!entity.HasComponent<ParentComponent>())
+				{
+					DrawEntityNode(entity);
+				}
+			}
+		}
+		else
+		{
+			for (auto it = view.rbegin(); it != view.rend(); ++it)
+			{
+				Entity entity = Entity(*it, m_EditorCtx.ActiveScene.Raw());
+				if (!entity.HasComponent<ParentComponent>())
+				{
+					DrawEntityNode(entity);
+				}
 			}
 		}
 
@@ -456,7 +498,6 @@ namespace Athena
 		DrawComponent<ScriptComponent>(entity, "Script", [entity](ScriptComponent& script)
 		{
  			const std::vector<String>& scripts = ScriptEngine::GetAvailableScripts();
-
 			UI::PropertyCombo("Script Name", scripts.data(), scripts.size(), &script.Name);
 
 			ScriptFieldMap* fieldMap = ScriptEngine::GetScriptFieldMap(entity);
@@ -466,41 +507,44 @@ namespace Athena
 
 			for (auto& [name, field] : *fieldMap)
 			{
-				if (field.GetType() == ScriptFieldType::Int32)
+				switch (field.GetType())
 				{
-					int32 data = field.GetValue<int32>();
-					if (UI::PropertyDrag(name.data(), &data))
-						field.SetValue(data);
-				}
-				if (field.GetType() == ScriptFieldType::Float)
-				{
-					float data = field.GetValue<float>();
-					if (UI::PropertyDrag(name.data(), &data))
-						field.SetValue(data);
-				}
-				if (field.GetType() == ScriptFieldType::Bool)
+				SCRIPT_FIELD_SCALAR_INPUT(byte,   Byte,   ImGuiDataType_U8);
+				SCRIPT_FIELD_SCALAR_INPUT(int16,  Int16,  ImGuiDataType_S16);
+				SCRIPT_FIELD_SCALAR_INPUT(uint16, UInt16, ImGuiDataType_U16);
+				SCRIPT_FIELD_SCALAR_INPUT(int32,  Int32,  ImGuiDataType_S32);
+				SCRIPT_FIELD_SCALAR_INPUT(uint32, UInt32, ImGuiDataType_U32);
+				SCRIPT_FIELD_SCALAR_INPUT(int64,  Int64,  ImGuiDataType_S64);
+				SCRIPT_FIELD_SCALAR_INPUT(uint64, UInt64, ImGuiDataType_U64);
+				SCRIPT_FIELD_SCALAR_INPUT(float,  Float,  ImGuiDataType_Float);
+				SCRIPT_FIELD_SCALAR_INPUT(double, Double, ImGuiDataType_Double);
+				
+				SCRIPT_FIELD_SCALAR_INPUT_N(Vector2, 2);
+				SCRIPT_FIELD_SCALAR_INPUT_N(Vector3, 3);
+				SCRIPT_FIELD_SCALAR_INPUT_N(Vector4, 4);
+
+				case ScriptFieldType::Bool:
 				{
 					bool data = field.GetValue<bool>();
 					if (UI::PropertyCheckbox(name.data(), &data))
 						field.SetValue(data);
+					break;
 				}
-				if (field.GetType() == ScriptFieldType::Vector2)
+				case ScriptFieldType::Char:
 				{
-					Vector2 data = field.GetValue<Vector2>();
-					if (UI::PropertyDrag(name.data(), &data))
-						field.SetValue(data);
+					char data = field.GetValue<char>();  
+					UI::PropertyRow(name.data(), ImGui::GetFrameHeight());
+
+					static char buffer[2];
+					buffer[0] = data;
+					buffer[1] = '\0';
+
+					ImGui::PushID(name.data());
+					if (ImGui::InputText("##InputText", buffer, sizeof(buffer)))
+						field.SetValue(buffer[0]);
+					ImGui::PopID();  
+					break;
 				}
-				if (field.GetType() == ScriptFieldType::Vector3)
-				{
-					Vector3 data = field.GetValue<Vector3>();
-					if (UI::PropertyDrag(name.data(), &data))
-						field.SetValue(data);
-				}
-				if (field.GetType() == ScriptFieldType::Vector4)
-				{
-					Vector4 data = field.GetValue<Vector4>();
-					if (UI::PropertyDrag(name.data(), &data))
-						field.SetValue(data);
 				}
 			}
 

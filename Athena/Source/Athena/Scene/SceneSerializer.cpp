@@ -21,6 +21,20 @@
 
 namespace YAML
 {
+#define WRITE_SCRIPT_FIELD(nativeType, fieldType)   \
+		case ScriptFieldType::fieldType:		    \
+			output << field.GetValue<nativeType>(); \
+			break								  
+	
+#define READ_SCRIPT_FIELD(nativeType, fieldType)						 \
+		case ScriptFieldType::fieldType:								 \
+		{																 \
+			nativeType data = scriptFieldNode["Data"].as<nativeType>();  \
+			field.SetValue(data);										 \
+			break;														 \
+		}
+
+
 	template <>
 	struct convert<Athena::Vector2>
 	{
@@ -65,6 +79,33 @@ namespace YAML
 			vec3.x = node[0].as<float>();
 			vec3.y = node[1].as<float>();
 			vec3.z = node[2].as<float>();
+			return true;
+		}
+	};
+
+	template <>
+	struct convert<Athena::Vector4>
+	{
+		static Node encode(const Athena::Vector4& vec4)
+		{
+			Node node;
+			node.push_back(vec4.x);
+			node.push_back(vec4.y);
+			node.push_back(vec4.z);
+			node.push_back(vec4.w);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, Athena::Vector4& vec4)
+		{
+			if (!node.IsSequence() || node.size() != 4)
+				return false;
+
+			vec4.x = node[0].as<float>();
+			vec4.y = node[1].as<float>();
+			vec4.z = node[2].as<float>();
+			vec4.w = node[3].as<float>();
 			return true;
 		}
 	};
@@ -135,6 +176,14 @@ namespace YAML
 	{
 		out << Flow;
 		out << BeginSeq << vec3.x << vec3.y << vec3.z << EndSeq;
+
+		return out;
+	}
+
+	Emitter& operator<<(Emitter& out, const Athena::Vector4& vec4)
+	{
+		out << Flow;
+		out << BeginSeq << vec4.x << vec4.y << vec4.z << vec4.w << EndSeq;
 
 		return out;
 	}
@@ -257,6 +306,50 @@ namespace Athena
 					{
 						auto& script = deserializedEntity.AddComponent<ScriptComponent>();
 						script.Name = scriptComponentNode["Name"].as<String>();
+
+						const YAML::Node& scriptFieldsNode = scriptComponentNode["ScriptFields"];
+						if (scriptFieldsNode && ScriptEngine::IsScriptExists(script.Name))
+						{
+							ScriptFieldMap* fieldMap = ScriptEngine::GetScriptFieldMap(deserializedEntity);
+
+							for (const YAML::Node& scriptFieldNode : scriptFieldsNode)
+							{
+								String name = scriptFieldNode["Name"].as<std::string>();
+								std::string typeString = scriptFieldNode["Type"].as<std::string>();
+								ScriptFieldType type = Utils::ScriptFieldTypeFromString(typeString);
+
+								if (!fieldMap || !fieldMap->contains(name))
+								{
+									ATN_CORE_WARN_TAG("Deserializer", "Uknown script field name '{}' (field will be discarded, script name - {}, entity name - {})!", 
+										name, script.Name, deserializedEntity.GetName());
+									continue;
+								}
+
+								ScriptFieldStorage& field = fieldMap->at(name);
+
+								if (type != field.GetType())
+								{
+									ATN_CORE_WARN_TAG("Deserializer", "Script field type '{}' does not match with original type '{}' (field will be discarded, script name - {}, entity name - {})!", 
+										Utils::ScriptFieldTypeToString(type), Utils::ScriptFieldTypeToString(field.GetType()), script.Name, deserializedEntity.GetName());
+									continue;
+								}
+
+								switch (type)
+								{
+								READ_SCRIPT_FIELD(bool, Bool);
+								READ_SCRIPT_FIELD(char, Char);
+								READ_SCRIPT_FIELD(byte, Byte);
+								READ_SCRIPT_FIELD(int16, Int16);
+								READ_SCRIPT_FIELD(int32, Int32);
+								READ_SCRIPT_FIELD(int64, Int64);
+								READ_SCRIPT_FIELD(uint16, UInt16);
+								READ_SCRIPT_FIELD(uint32, UInt32);
+								READ_SCRIPT_FIELD(uint64, UInt64);
+								READ_SCRIPT_FIELD(float, Float);
+								READ_SCRIPT_FIELD(double, Double);
+								}
+							}
+						}
 					}
 				}
 
@@ -552,9 +645,47 @@ namespace Athena
 			});
 
 		SerializeComponent<ScriptComponent>(out, "ScriptComponent", entity,
-			[](YAML::Emitter& output, const ScriptComponent& script)
+			[entity](YAML::Emitter& output, const ScriptComponent& script)
 			{
 				output << YAML::Key << "Name" << YAML::Value << script.Name;
+
+				const ScriptFieldMap* fieldMap = ScriptEngine::GetScriptFieldMap(entity);
+				if (!fieldMap)
+					return;
+
+				output << YAML::Key << "ScriptFields" << YAML::Value;
+				output << YAML::BeginSeq;
+
+				for (const auto& [name, field] : *fieldMap)
+				{
+					output << YAML::BeginMap;
+
+					output << YAML::Key << "Name" << YAML::Value << name.data();
+					output << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.GetType());
+					output << YAML::Key << "Data" << YAML::Value;
+
+					switch (field.GetType())
+					{
+					WRITE_SCRIPT_FIELD(bool,    Bool);
+					WRITE_SCRIPT_FIELD(char,    Char);
+					WRITE_SCRIPT_FIELD(byte,    Byte);
+					WRITE_SCRIPT_FIELD(int16,   Int16);
+					WRITE_SCRIPT_FIELD(int32,   Int32);
+					WRITE_SCRIPT_FIELD(int64,   Int64);
+					WRITE_SCRIPT_FIELD(uint16,  UInt16);
+					WRITE_SCRIPT_FIELD(uint32,  UInt32);
+					WRITE_SCRIPT_FIELD(uint64,  UInt64);
+					WRITE_SCRIPT_FIELD(float,   Float);
+					WRITE_SCRIPT_FIELD(double,  Double);
+					WRITE_SCRIPT_FIELD(Vector2, Vector2);
+					WRITE_SCRIPT_FIELD(Vector3, Vector3);
+					WRITE_SCRIPT_FIELD(Vector4, Vector4);
+					}
+
+					output << YAML::EndMap;
+				}
+
+				output << YAML::EndSeq;
 			});
 
 		SerializeComponent<CameraComponent>(out, "CameraComponent", entity,

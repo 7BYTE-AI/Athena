@@ -10,6 +10,10 @@ Entities:
       Scale: [1, 0.999999702, 0.999995351]
     ScriptComponent:
       Name: FirstPersonCamera
+      ScriptFields:
+        - Name: m_Speed
+          Type: Float
+          Data: 2
     CameraComponent:
       Camera:
         ProjectionType: 0
@@ -156,6 +160,12 @@ Entities:
       Translation: [-1.31703436, 2.98000145, 3.50187826]
       Rotation: [1, 0, 0, 0]
       Scale: [1, 2.77572393, 1]
+    ScriptComponent:
+      Name: FirstPersonCamera
+      ScriptFields:
+        - Name: m_Speed
+          Type: Float
+          Data: 1
     StaticMeshComponent:
       FilePath: Assets\Meshes\Cube.obj
       Visible: true

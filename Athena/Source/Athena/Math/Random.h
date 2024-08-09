@@ -13,7 +13,7 @@
 
 namespace Athena::Math
 {
-	class Random
+	class ATHENA_API Random
 	{
 	public:
 		static float Float()

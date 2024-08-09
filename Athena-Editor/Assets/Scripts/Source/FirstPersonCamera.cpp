@@ -17,6 +17,7 @@ namespace Sandbox
 	void FirstPersonCamera::OnUpdate(Time frameTime)
 	{
 		GetComponent<TransformComponent>().Translation.x += m_Speed * frameTime.AsSeconds();
+		m_Speed += 0.01f;
 	}
 
 	void FirstPersonCamera::GetFieldsDescription(ScriptFieldMap* outFields)

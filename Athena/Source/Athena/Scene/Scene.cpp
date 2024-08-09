@@ -257,9 +257,10 @@ namespace Athena
 
 	Entity Scene::GetEntityByUUID(UUID uuid)
 	{
-		ATN_CORE_VERIFY(m_EntityMap.find(uuid) != m_EntityMap.end());
+		if(m_EntityMap.contains(uuid))
+			return { m_EntityMap.at(uuid), this };
 
-		return { m_EntityMap.at(uuid), this };
+		return Entity{};
 	}
 
 	Entity Scene::FindEntityByName(const String& name)
@@ -325,7 +326,6 @@ namespace Athena
 				}
 			}
 		}
-
 
 		// Physics
 		UpdatePhysics(frameTime);

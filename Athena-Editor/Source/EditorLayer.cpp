@@ -279,8 +279,9 @@ namespace Athena
                 if (ImGui::BeginMenu("Scripting"))
                 {
                     EditorSettings& settings = m_EditorCtx->EditorSettings;
+                    bool isRuntime = m_EditorCtx->SceneState == SceneState::Play;
 
-                    if (ImGui::MenuItem("Reload Scripts"))
+                    if (ImGui::MenuItem("Reload Scripts", NULL, false, !isRuntime))
                     {
                         ScriptEngine::ReloadScripts();
                     }
@@ -794,21 +795,10 @@ namespace Athena
         m_RuntimeScene = Scene::Copy(m_EditorScene);
         m_RuntimeScene->OnViewportResize(vpDesc.Size.x, vpDesc.Size.y);
         m_RuntimeScene->OnRuntimeStart();
-
         m_EditorCtx->ActiveScene = m_RuntimeScene;
-        m_EditorCtx->SelectedEntity = {};
-    }
 
-    void EditorLayer::OnSceneStop()
-    {
-        ATN_PROFILE_FUNC();
-
-        m_EditorCtx->SceneState = SceneState::Edit;
-
-        m_EditorCtx->ActiveScene->OnRuntimeStop();
-        m_EditorCtx->ActiveScene = m_EditorScene;
-        m_EditorCtx->SelectedEntity = {};
-        m_RuntimeScene = nullptr;
+        if (m_EditorCtx->SelectedEntity)
+            m_EditorCtx->SelectedEntity = m_RuntimeScene->GetEntityByUUID(m_EditorCtx->SelectedEntity.GetID());
     }
 
     void EditorLayer::OnSceneSimulate()
@@ -823,9 +813,25 @@ namespace Athena
         m_RuntimeScene = Scene::Copy(m_EditorScene);
         m_RuntimeScene->OnViewportResize(vpDesc.Size.x, vpDesc.Size.y);
         m_RuntimeScene->OnSimulationStart();
-
-        m_EditorCtx->SelectedEntity = {};
         m_EditorCtx->ActiveScene = m_RuntimeScene;
+
+        if (m_EditorCtx->SelectedEntity)
+            m_EditorCtx->SelectedEntity = m_RuntimeScene->GetEntityByUUID(m_EditorCtx->SelectedEntity.GetID());
+    }
+
+    void EditorLayer::OnSceneStop()
+    {
+        ATN_PROFILE_FUNC();
+
+        m_EditorCtx->SceneState = SceneState::Edit;
+
+        m_EditorCtx->ActiveScene->OnRuntimeStop();
+        m_EditorCtx->ActiveScene = m_EditorScene;
+
+        if (m_EditorCtx->SelectedEntity)
+            m_EditorCtx->SelectedEntity = m_EditorScene->GetEntityByUUID(m_EditorCtx->SelectedEntity.GetID());
+
+        m_RuntimeScene = nullptr;
     }
 
     void EditorLayer::OnEvent(Event& event)

@@ -50,7 +50,9 @@ namespace Athena
 		ScriptInstance(ScriptInstance&& other) = default;
 		ScriptInstance& operator=(ScriptInstance&& other) = default;
 
-		void UpdateFieldMapRefs(ScriptFieldMap& fieldMap);
+		ScriptFieldMap& GetFieldMap() { return m_FieldMap; }
+		bool IsFieldMapInitialized() const { return !m_FieldMap.empty(); }
+		void UpdateFieldMap(Entity entity, bool write = true);
 
 		void InvokeOnCreate();
 		void InvokeOnUpdate(Time frameTime);
@@ -60,6 +62,7 @@ namespace Athena
 	private:
 		ScriptClass* m_ScriptClass;
 		Script* m_Instance = nullptr;
+		ScriptFieldMap m_FieldMap;
 	};
 
 

@@ -13,7 +13,7 @@ namespace Athena
 
 	void SceneCamera::SetViewportSize(uint32 width, uint32 height)
 	{
-		m_AspecRatio = (float)width / (float)height;
+		m_AspectRatio = (float)width / (float)height;
 		RecalculateProjection();
 	}
 
@@ -42,8 +42,8 @@ namespace Athena
 	{
 		if (m_ProjectionType == ProjectionType::Orthographic)
 		{
-			float orthoLeft = -m_OrthoData.Size * m_AspecRatio * 0.5f;
-			float orthoRight = m_OrthoData.Size * m_AspecRatio * 0.5f;
+			float orthoLeft = -m_OrthoData.Size * m_AspectRatio * 0.5f;
+			float orthoRight = m_OrthoData.Size * m_AspectRatio * 0.5f;
 			float orthoBottom = -m_OrthoData.Size * 0.5f;
 			float orthoTop = m_OrthoData.Size * 0.5f;
 
@@ -51,7 +51,7 @@ namespace Athena
 		}
 		else if (m_ProjectionType == ProjectionType::Perspective)
 		{
-			m_ProjectionMatrix = Math::PerspectiveReverseZ(m_PerspectiveData.VerticalFOV, m_AspecRatio,
+			m_ProjectionMatrix = Math::PerspectiveReverseZ(m_PerspectiveData.VerticalFOV, m_AspectRatio,
 				m_PerspectiveData.NearClip, m_PerspectiveData.FarClip);
 		}
 	}

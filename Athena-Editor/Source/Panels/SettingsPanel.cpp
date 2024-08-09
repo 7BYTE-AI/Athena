@@ -32,7 +32,7 @@ namespace Athena
 		UI::EnumAdd("DebugView", 0, "None");
 		UI::EnumAdd("DebugView", 1, "Shadow Cascades");
 		UI::EnumAdd("DebugView", 2, "Light Complexity");
-		UI::EnumAdd("DebugView", 3, "GBUFFER");
+		UI::EnumAdd("DebugView", 3, "GBuffer");
 	}
 
 	void SettingsPanel::OnImGuiRender()

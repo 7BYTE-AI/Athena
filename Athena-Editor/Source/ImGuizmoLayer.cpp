@@ -11,14 +11,20 @@ namespace Athena
     ImGuizmoLayer::ImGuizmoLayer(const Ref<EditorContext>& context, const Ref<EditorCamera>& camera)
     {
         m_EditorCtx = context;
-        m_Camera = camera;
+        m_EditorCamera = camera;
     }
 
 	void ImGuizmoLayer::OnImGuiRender() 
 	{
         Entity entity = m_EditorCtx->SelectedEntity;
 
-        if (m_Camera && m_ViewportPanel && entity && m_GuizmoOperation != ImGuizmo::OPERATION::BOUNDS && entity.HasComponent<TransformComponent>())
+        Entity cameraEntity = m_EditorCtx->ActiveScene->GetPrimaryCameraEntity();
+        bool isRuntime = m_EditorCtx->SceneState == SceneState::Play;
+        SceneCamera* runtimeCamera = isRuntime && cameraEntity ? &cameraEntity.GetComponent<CameraComponent>().Camera : nullptr;
+
+        bool hasCamera = isRuntime ? cameraEntity != Entity{} : m_EditorCamera != nullptr;
+
+        if (hasCamera && m_ViewportPanel && entity && m_GuizmoOperation != ImGuizmo::OPERATION::BOUNDS && entity.HasComponent<TransformComponent>())
         {
             bool isOrthographic = false;
 
@@ -60,16 +66,18 @@ namespace Athena
                 // Need to recreate projection matrix, because ImGuizmo 
                 // does not work properly with reversed Z projection
 
-                CameraInfo info = m_Camera->GetCameraInfo();
+                CameraInfo info = isRuntime ? runtimeCamera->GetCameraInfo() : m_EditorCamera->GetCameraInfo();
                 float fov = info.FOV;
                 float znear = info.NearClip;
                 float zfar = info.FarClip;
-                float aspectRatio = m_Camera->GetAspectRatio();
+                float aspectRatio = isRuntime ? runtimeCamera->GetAspectRatio() : m_EditorCamera->GetAspectRatio();
 
                 cameraProjection = Math::Perspective(fov, aspectRatio, znear, zfar);
                 cameraProjection[1][1] = -cameraProjection[1][1]; // invert y
 
-                cameraView = m_Camera->GetViewMatrix();
+                cameraView = isRuntime ?
+                    Math::AffineInverse(cameraEntity.GetComponent<WorldTransformComponent>().AsMatrix()) :
+                    m_EditorCamera->GetViewMatrix();
             }
 
             const WorldTransformComponent& worldTransform = m_EditorCtx->SelectedEntity.GetComponent<WorldTransformComponent>();

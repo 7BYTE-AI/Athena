@@ -36,7 +36,7 @@ namespace Athena
 		ImGuizmo::OPERATION m_GuizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
 
 		Ref<EditorContext> m_EditorCtx;
-		Ref<EditorCamera> m_Camera;
+		Ref<EditorCamera> m_EditorCamera;
 
 		ViewportPanel* m_ViewportPanel = nullptr;
 	};

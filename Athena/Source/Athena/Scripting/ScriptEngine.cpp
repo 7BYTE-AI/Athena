@@ -27,26 +27,26 @@ namespace Athena
 		Scope<filewatch::FileWatch<String>> ScriptsAssemblyFileWatcher;
 		bool ReloadPending = false;
 
+		bool IsRuntime = false;
 		Scene* SceneContext = nullptr;
 	};
 
 	static ScriptEngineData* s_Data = nullptr;
 
-	static void OnScriptsAssemblyFileSystemEvent(const String& path, const filewatch::Event change_type)
+	static void OnScriptsAssemblyFileSystemEvent(const String& path, const filewatch::Event changeType)
 	{
-		if (!s_Data->ReloadPending && change_type == filewatch::Event::modified)
+		if (!s_Data->ReloadPending && !s_Data->IsRuntime && changeType == filewatch::Event::modified)
 		{
 			s_Data->ReloadPending = true;
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));	// HACK
 
 			Application::Get().SubmitToMainThread([]()
 			{
 				s_Data->ScriptsAssemblyFileWatcher.Release();
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(1000));	// TODO: HACK
 				ScriptEngine::ReloadScripts();
 			});
 		}
-	}
+	}	
 
 	template<typename FuncT, typename... Args>
 	static bool InvokeScriptFunc(const String& scriptName, Entity entity, FuncT func, Args&&... args)
@@ -108,7 +108,7 @@ namespace Athena
 				{
 					// Request for initial value
 					storage.GetValue<bool>();
-					storage.SetInternalRef(nullptr);
+					storage.RemoveFieldReference();
 				}
 
 				delete script;
@@ -137,10 +137,7 @@ namespace Athena
 		m_Instance = m_ScriptClass->Instantiate(entity);
 
 		if (s_Data->EntityScriptFields.contains(entity.GetID()))
-		{
-			ScriptFieldMap& entityFieldMap = s_Data->EntityScriptFields.at(entity.GetID());
-			UpdateFieldMapRefs(entityFieldMap);
-		}
+			UpdateFieldMap(entity, true);
 	}
 
 	ScriptInstance::~ScriptInstance()
@@ -148,17 +145,18 @@ namespace Athena
 		delete m_Instance;
 	}
 
-	void ScriptInstance::UpdateFieldMapRefs(ScriptFieldMap& fieldMap)
+	void ScriptInstance::UpdateFieldMap(Entity entity, bool write)
 	{
+		m_FieldMap = s_Data->EntityScriptFields.at(entity.GetID());
+
 		ScriptFieldMap fieldRefs;
 		InvokeScriptFunc(m_ScriptClass->GetName(), m_Instance->GetEntity(), m_ScriptClass->GetGetFieldsDescriptionMethod(),
 			m_Instance, &fieldRefs);
 
-		ATN_CORE_ASSERT(fieldMap.size() == fieldRefs.size());
-
-		for (auto& [name, field] : fieldMap)
+		ATN_CORE_ASSERT(m_FieldMap.size() == fieldRefs.size());
+		for (auto& [name, field] : m_FieldMap)
 		{
-			field.SetInternalRef(fieldRefs.at(name).GetInternalRef());
+			field.SetFieldReference(fieldRefs.at(name).GetFieldReference(), write);
 		}
 	}
 
@@ -214,7 +212,7 @@ namespace Athena
 			return;
 		}
 
-		// Create copy of dll and pdb to read from it, another dll for writing
+		// Create copy of dll and pdb to read from it, original dll and pdb for writing
 		const FilePath& libPath = s_Data->Config.ScriptsBinaryPath;
 		FilePath pdbPath = s_Data->Config.ScriptsBinaryPath;
 		pdbPath.replace_extension("pdb");
@@ -298,26 +296,36 @@ namespace Athena
 
 	ScriptFieldMap* ScriptEngine::GetScriptFieldMap(Entity entity)
 	{
-		if (s_Data->EntityScriptFields.contains(entity.GetID()))
-			return &s_Data->EntityScriptFields.at(entity.GetID());
+		UUID entityID = entity.GetID();
+
+		if (s_Data->IsRuntime)
+		{
+			if (s_Data->EntityInstances.contains(entityID) && s_Data->EntityInstances.at(entityID).IsFieldMapInitialized())
+				return &s_Data->EntityInstances.at(entityID).GetFieldMap();
+		}
+		else
+		{
+			if (s_Data->EntityScriptFields.contains(entityID))
+				return &s_Data->EntityScriptFields.at(entityID);
+		}
 
 		const auto& scriptName = entity.GetComponent<ScriptComponent>().Name;
 
 		if (s_Data->ScriptClasses.contains(scriptName))
 		{
 			ScriptClass scClass = s_Data->ScriptClasses.at(scriptName);
-			uint32 fieldsCount = scClass.GetFieldsDescription().size();
-			if (fieldsCount != 0)
+			if (!scClass.GetFieldsDescription().empty())
 			{
-				ScriptFieldMap& fieldMap = s_Data->EntityScriptFields[entity.GetID()] = scClass.GetFieldsDescription();
+				s_Data->EntityScriptFields[entityID] = scClass.GetFieldsDescription();
 
-				// Update refs if initialize fieldMap at runtime
-				if (s_Data->EntityInstances.contains(entity.GetID()))
+				// Update field refs if initialize fieldMap at runtime
+				if (s_Data->EntityInstances.contains(entityID))
 				{
-					s_Data->EntityInstances.at(entity.GetID()).UpdateFieldMapRefs(fieldMap);
+					s_Data->EntityInstances.at(entityID).UpdateFieldMap(entity, false);
+					return &s_Data->EntityInstances.at(entityID).GetFieldMap();
 				}
 
-				return &fieldMap;
+				return &s_Data->EntityScriptFields.at(entityID);
 			}
 		}
 
@@ -332,19 +340,13 @@ namespace Athena
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
 	{
+		s_Data->IsRuntime = true;
 		s_Data->SceneContext = scene;
 	}
 
 	void ScriptEngine::OnRuntimeStop()
 	{
-		for (auto& [entity, fieldMap] : s_Data->EntityScriptFields)
-		{
-			for (auto& [name, field] : fieldMap)
-			{
-				field.SetInternalRef(nullptr);
-			}
-		}
-
+		s_Data->IsRuntime = false;
 		s_Data->SceneContext = nullptr;
 		s_Data->EntityInstances.clear();
 	}
@@ -393,16 +395,16 @@ namespace Athena
 	void ScriptEngine::GenerateCMakeConfig()
 	{
 		FilePath scResources = Application::Get().GetConfig().EngineResourcesPath / "Scripting";
-		FilePath configTemplate = scResources / "Config-Template.cmake";
+		FilePath configTemplatePath = scResources / "Config-Template.cmake";
 
-		if (!FileSystem::Exists(configTemplate))
+		if (!FileSystem::Exists(configTemplatePath))
 		{
 			ATN_CORE_ERROR_TAG("ScriptEngine", "Failed to find config template!");
 			return;
 		}
 
 		// TODO: Projects
-		String configSource = FileSystem::ReadFile(configTemplate);
+		String configSource = FileSystem::ReadFile(configTemplatePath);
 		Utils::ReplaceAll(configSource, "<REPLACE_PROJECT_NAME>", "Sandbox");
 		Utils::ReplaceAll(configSource, "<REPLACE_ATHENA_SOURCE_DIR>", "${CMAKE_SOURCE_DIR}/../../..");
 		Utils::ReplaceAll(configSource, "<REPLACE_ATHENA_BINARY_DIR>", "${CMAKE_SOURCE_DIR}/../../../Build/Binaries/Athena");
@@ -414,8 +416,19 @@ namespace Athena
 #endif
 
 		FilePath configPath = s_Data->Config.ScriptsPath / "Config.cmake";
-		if (!FileSystem::WriteFile(configPath, configSource.c_str(), configSource.size()))
-			ATN_CORE_ERROR_TAG("ScriptEngine", "Failed to generate cmake config {}", configPath);
+		bool generate = !FileSystem::Exists(configPath);
+
+		if (!generate)
+		{
+			String configOldSource = FileSystem::ReadFile(configPath);
+			generate = configOldSource != configSource;
+		}
+
+		if (generate)
+		{
+			if (!FileSystem::WriteFile(configPath, configSource.c_str(), configSource.size()))
+				ATN_CORE_ERROR_TAG("ScriptEngine", "Failed to generate cmake config {}", configPath);
+		}
 	}
 
 	void ScriptEngine::CreateNewScript(const String& name)

@@ -47,6 +47,7 @@ namespace Athena
 		void SetProjectionType(ProjectionType type) { m_ProjectionType = type; RecalculateProjection(); }
 
 		const Matrix4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		float GetAspectRatio() const { return m_AspectRatio; }
 
 	private:
 		void RecalculateProjection();
@@ -57,7 +58,7 @@ namespace Athena
 		OrthographicData m_OrthoData;
 		PerspectiveData m_PerspectiveData;
 
-		float m_AspecRatio = 1.f;
+		float m_AspectRatio = 1.f;
 		Matrix4 m_ProjectionMatrix;
 	};
 }
