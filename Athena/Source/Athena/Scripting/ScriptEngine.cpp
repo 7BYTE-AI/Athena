@@ -19,10 +19,11 @@ namespace Athena
 		ScriptConfig Config;
 		Scope<Library> ScriptsLibrary;
 
-		std::vector<String> ScriptsNames;
+		std::vector<String> ScriptNames;
 		std::unordered_map<String, ScriptClass> ScriptClasses;
-		std::unordered_map<UUID, ScriptInstance> EntityInstances;
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
+		std::unordered_map<UUID, String> EntityScriptNames;
+		std::unordered_map<UUID, ScriptInstance> EntityInstances;
 
 		Scope<filewatch::FileWatch<String>> ScriptsAssemblyFileWatcher;
 		bool ReloadPending = false;
@@ -195,7 +196,10 @@ namespace Athena
 		s_Data->Config.ScriptsBinaryPath = debugBinaryPath;
 #endif
 
+#ifndef ATN_DIST
 		GenerateCMakeConfig();
+#endif
+
 		ReloadScripts();
 	}
 
@@ -206,11 +210,18 @@ namespace Athena
 
 	void ScriptEngine::LoadAssembly()
 	{
-		if (!FileSystem::Exists(s_Data->Config.ScriptsBinaryPath))
+#ifdef ATN_DIST
+		const FilePath& libPath = s_Data->Config.ScriptsBinaryPath;
+
+		if (!FileSystem::Exists(libPath))
 		{
-			ATN_CORE_ERROR_TAG("SriptEngine", "Scripts binary does not exists {}!", s_Data->Config.ScriptsBinaryPath);
+			ATN_CORE_ERROR_TAG("ScriptEngine", "Scripts binary does not exists {}!", libPath);
 			return;
 		}
+
+		s_Data->ScriptsLibrary = Scope<Library>::Create(libPath);
+#else
+		s_Data->ReloadPending = true;
 
 		// Create copy of dll and pdb to read from it, original dll and pdb for writing
 		const FilePath& libPath = s_Data->Config.ScriptsBinaryPath;
@@ -220,18 +231,23 @@ namespace Athena
 		FilePath activeFolder = libPath.parent_path() / "Active";
 
 		if (!FileSystem::Exists(activeFolder))
-		{
 			FileSystem::CreateDirectory(activeFolder);
-		}
 
+		if (!FileSystem::Exists(libPath))
+		{
+			ATN_CORE_ERROR_TAG("ScriptEngine", "Scripts binary does not exists {}!", libPath);
+			return;
+		}
+		
 		FilePath activeLibPath = activeFolder / libPath.filename();
-		FilePath activePdbPath = activeFolder / pdbPath.filename();
 
 		if (!FileSystem::Copy(libPath, activeLibPath))
 		{
 			ATN_CORE_ERROR_TAG("ScriptEngine", "Failed to load scripting library!");
 			return;
 		}
+
+		FilePath activePdbPath = activeFolder / pdbPath.filename();
 
 		if (FileSystem::Exists(pdbPath))
 		{
@@ -242,14 +258,20 @@ namespace Athena
 		}
 
 		s_Data->ScriptsLibrary = Scope<Library>::Create(activeLibPath);
-		s_Data->ScriptsAssemblyFileWatcher = Scope<filewatch::FileWatch<String>>::Create(s_Data->Config.ScriptsBinaryPath.string(), OnScriptsAssemblyFileSystemEvent);
+		s_Data->ScriptsAssemblyFileWatcher = Scope<filewatch::FileWatch<String>>::Create(libPath.string(), OnScriptsAssemblyFileSystemEvent);
 		s_Data->ReloadPending = false;
+
+#endif
 	}
 
 	void ScriptEngine::InitScriptClasses()
 	{
 		if (!s_Data->ScriptsLibrary || !s_Data->ScriptsLibrary->IsLoaded())
+		{
+			s_Data->EntityScriptFields.clear();
+			s_Data->EntityScriptNames.clear();
 			return;
+		}
 
 		FilePath sourceDir = s_Data->Config.ScriptsPath / "Source";
 
@@ -259,9 +281,9 @@ namespace Athena
 			return;
 		}
 
-		FindScripts(sourceDir, s_Data->ScriptsNames);
+		FindScripts(sourceDir, s_Data->ScriptNames);
 
-		for (const auto& scriptName : s_Data->ScriptsNames)
+		for (const auto& scriptName : s_Data->ScriptNames)
 		{
 			ScriptClass scriptClass = ScriptClass(scriptName);
 
@@ -269,16 +291,42 @@ namespace Athena
 				s_Data->ScriptClasses[scriptName] = scriptClass;
 		}
 
-		if (s_Data->ScriptsNames.empty())
+		if (s_Data->ScriptNames.empty())
 			ATN_CORE_WARN_TAG("ScriptEngine", "Failed to find any scripts in scripts binary!");
+
+		// Restore old edited field values
+		std::vector<UUID> entitiesToRemove;
+		for (const auto& [entityID, fieldMap] : s_Data->EntityScriptFields)
+		{
+			const String& className = s_Data->EntityScriptNames.at(entityID);
+			if (!ScriptEngine::IsScriptExists(className))
+				entitiesToRemove.push_back(entityID);
+
+			const ScriptClass& scClass = s_Data->ScriptClasses.at(className);
+			const ScriptFieldMap& fieldMapDesc = scClass.GetFieldsDescription();
+			
+			ScriptFieldMap newFieldMap = fieldMapDesc;
+			for (auto& [name, field] : fieldMapDesc)
+			{
+				if (fieldMap.contains(name) && (fieldMap.at(name).GetType() == newFieldMap.at(name).GetType()))
+					newFieldMap.at(name) = fieldMap.at(name);
+			}
+
+			s_Data->EntityScriptFields.at(entityID) = newFieldMap;
+		}
+
+		for (const auto& entityID : entitiesToRemove)
+		{
+			s_Data->EntityScriptNames.erase(entityID);
+			s_Data->EntityScriptFields.erase(entityID);
+		}
 	}
 
 	void ScriptEngine::ReloadScripts()
 	{
 		s_Data->ScriptsLibrary.Release();
 		s_Data->ScriptClasses.clear();
-		s_Data->ScriptsNames.clear();
-		s_Data->EntityScriptFields.clear();
+		s_Data->ScriptNames.clear();
 
 		LoadAssembly();
 		InitScriptClasses();
@@ -286,12 +334,12 @@ namespace Athena
 
 	bool ScriptEngine::IsScriptExists(const String& name)
 	{
-		return std::find(s_Data->ScriptsNames.begin(), s_Data->ScriptsNames.end(), name) != s_Data->ScriptsNames.end();
+		return s_Data->ScriptClasses.contains(name);
 	}
 
 	const std::vector<String>& ScriptEngine::GetAvailableScripts()
 	{
-		return s_Data->ScriptsNames;
+		return s_Data->ScriptNames;
 	}
 
 	ScriptFieldMap* ScriptEngine::GetScriptFieldMap(Entity entity)
@@ -317,6 +365,7 @@ namespace Athena
 			if (!scClass.GetFieldsDescription().empty())
 			{
 				s_Data->EntityScriptFields[entityID] = scClass.GetFieldsDescription();
+				s_Data->EntityScriptNames[entityID] = scriptName;
 
 				// Update field refs if initialize fieldMap at runtime
 				if (s_Data->EntityInstances.contains(entityID))
@@ -332,10 +381,18 @@ namespace Athena
 		return nullptr;
 	}
 
-	void ScriptEngine::ClearEntityFieldMap(Entity entity)
+	void ScriptEngine::OnEntityScriptRemove(Entity entity)
 	{
-		if(s_Data->EntityScriptFields.contains(entity.GetID()))
-			s_Data->EntityScriptFields.erase(entity.GetID());
+		UUID entityID = entity.GetID();
+
+		if(s_Data->EntityScriptFields.contains(entityID))
+			s_Data->EntityScriptFields.erase(entityID);
+
+		if (s_Data->EntityScriptNames.contains(entityID))
+			s_Data->EntityScriptNames.erase(entityID);
+
+		if (s_Data->IsRuntime && s_Data->EntityInstances.contains(entityID))
+			s_Data->EntityInstances.erase(entityID);
 	}
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)

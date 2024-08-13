@@ -83,7 +83,6 @@ namespace Athena
         if (ImGui::BeginDragDropTarget())
         {
             m_DragDropCallback();
-
             ImGui::EndDragDropTarget();
         }
 

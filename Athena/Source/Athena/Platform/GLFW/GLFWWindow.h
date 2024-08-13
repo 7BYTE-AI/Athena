@@ -315,19 +315,6 @@ namespace Athena
 		m_SwapChain->SetVSync(enabled);
 	}
 
-	void Window::HideCursor(bool hide)
-	{
-		if (hide)
-			glfwSetInputMode((GLFWwindow*)m_WindowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		else
-			glfwSetInputMode((GLFWwindow*)m_WindowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
-
-	void Window::SetCursorPosition(Vector2 position)
-	{
-		glfwSetCursorPos((GLFWwindow*)m_WindowHandle, position.x, position.y);
-	}
-
 	void Window::SetIcon(const FilePath& path)
 	{
 		if (FileSystem::Exists(path))

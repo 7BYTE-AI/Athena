@@ -295,7 +295,7 @@ namespace Athena
 	private:
 		const uint32 m_ShadowMapResolution = 2048;
 
-		const float m_OutlineWidth = 1.3f;
+		const float m_OutlineWidth = 0.8f;
 		const Vector4 m_OutlineColor = { 1.f, 0.5f, 0.f, 1.f };
 
 	private:

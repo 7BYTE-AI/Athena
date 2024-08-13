@@ -31,8 +31,6 @@ Entities:
       Translation: [-0.684216499, 1.60174191, 0]
       Rotation: [1, 0, 0, 0]
       Scale: [0.249983385, 0.249983385, 1]
-    ScriptComponent:
-      Name: Player2D
     SpriteComponent:
       Space: 1
       Color: [1, 0.608716488, 0.0632911325, 1]
@@ -117,8 +115,6 @@ Entities:
       Translation: [0, 0.734100044, 3.13647175]
       Rotation: [1, 0, 0, 0]
       Scale: [1, 1, 1]
-    ScriptComponent:
-      Name: Camera2D
     CameraComponent:
       Camera:
         ProjectionType: 0

@@ -32,6 +32,45 @@ namespace Athena
 		return Vector2((float)x, float(y));
 	}
 
+	void Input::SetMousePosition(Vector2 position)
+	{
+		auto window = reinterpret_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		glfwSetCursorPos(window, position.x, position.y);
+	}
+
+	CursorMode Input::GetCursorMode()
+	{
+		auto window = reinterpret_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		int value = glfwGetInputMode(window, GLFW_CURSOR);
+
+		if (value == GLFW_CURSOR_NORMAL)
+			return CursorMode::Normal;
+
+		if (value == GLFW_CURSOR_HIDDEN)
+			return CursorMode::Hidden;
+
+		if (value == GLFW_CURSOR_DISABLED)
+			return CursorMode::Disabled;
+
+		ATN_CORE_ASSERT(false);
+		return (CursorMode)0;
+	}
+
+	void Input::SetCursorMode(CursorMode mode)
+	{
+		auto window = reinterpret_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+
+		int value = 0;
+		switch (mode)
+		{
+		case CursorMode::Normal:   value = GLFW_CURSOR_NORMAL;   break;
+		case CursorMode::Hidden:   value = GLFW_CURSOR_HIDDEN;   break;
+		case CursorMode::Disabled: value = GLFW_CURSOR_DISABLED; break;
+		}
+
+		glfwSetInputMode(window, GLFW_CURSOR, value);
+	}
+
 	int32 Input::ConvertToNativeKeyCode(Keyboard::Key keycode)
 	{
 		return (int32)keycode;

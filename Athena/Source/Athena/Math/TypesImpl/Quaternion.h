@@ -193,13 +193,11 @@ namespace Athena::Math
 			float sqy = y * y;
 			float sqz = z * z;
 
-			Vector3 result;
+			float roll = Math::Atan2(T(2.f) * (y * z + x * w), (-sqx - sqy + sqz + sqw));
+			float pitch = Math::Asin(T(-2.f) * (x * z - y * w));
+			float yaw = Math::Atan2(T(2.f) * (x * y + z * w), (sqx - sqy - sqz + sqw));
 
-			result.x = Math::Atan2(T(2.f) * (y * z + x * w), (-sqx - sqy + sqz + sqw));
-			result.y = Math::Asin(T(-2.f) * (x * z - y * w));
-			result.z = Math::Atan2(T(2.f) * (x * y + z * w), (sqx - sqy - sqz + sqw));
-
-			return result;
+			return { roll, pitch, yaw };
 		}
 
 		inline Matrix<T, 4, 4> AsMatrix() const

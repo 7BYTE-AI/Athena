@@ -202,7 +202,7 @@ namespace Athena
 		byte m_Buffer[16];
 	};
 
-	using ScriptFieldMap = std::unordered_map<std::string_view, ScriptFieldStorage>;
+	using ScriptFieldMap = std::unordered_map<String, ScriptFieldStorage>;
 
 
 	namespace Utils 

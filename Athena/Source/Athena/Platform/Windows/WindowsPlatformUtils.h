@@ -299,7 +299,7 @@ namespace Athena
 		WINAPI_CHECK_LASTERROR();
 
 		if (IsLoaded())
-			ATN_CORE_INFO_TAG("Platform", "Successfully loaded library from '{}'", m_Path);
+			ATN_CORE_INFO_TAG("Platform", "Successfully loaded library from {}", m_Path);
 	}
 
 	Library::~Library()

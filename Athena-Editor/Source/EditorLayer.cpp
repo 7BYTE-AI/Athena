@@ -99,16 +99,13 @@ namespace Athena
             m_EditorCtx->ActiveScene->OnViewportResize(vpDesc.Size.x, vpDesc.Size.y);
         }
 
-        if ((m_HideCursor || vpDesc.IsHovered) && !ImGuizmo::IsUsing())
+        if ((Input::GetCursorMode() == CursorMode::Disabled || vpDesc.IsHovered) && !ImGuizmo::IsUsing() && (m_EditorCtx->SceneState != SceneState::Play))
             m_EditorCamera->OnUpdate(frameTime);
 
         switch (m_EditorCtx->SceneState)
         {
         case SceneState::Edit:
         {
-            if ((m_HideCursor || vpDesc.IsHovered) && !ImGuizmo::IsUsing())
-                m_EditorCamera->OnUpdate(frameTime);
-
             m_EditorCtx->ActiveScene->OnUpdateEditor(frameTime);
             m_EditorCtx->ActiveScene->OnRender(m_ViewportRenderer, *m_EditorCamera);
             break;
@@ -121,9 +118,6 @@ namespace Athena
         }
         case SceneState::Simulation:
         {
-            if ((m_HideCursor || vpDesc.IsHovered) && !ImGuizmo::IsUsing())
-                m_EditorCamera->OnUpdate(frameTime);
-
             m_EditorCtx->ActiveScene->OnUpdateSimulation(frameTime);
             m_EditorCtx->ActiveScene->OnRender(m_ViewportRenderer, *m_EditorCamera);
             break;
@@ -224,13 +218,15 @@ namespace Athena
             {
                 if (ImGui::BeginMenu("File"))
                 {
-                    if (ImGui::MenuItem("New", "Ctrl+N", false))
+                    bool isEdit = m_EditorCtx->SceneState == SceneState::Edit;
+
+                    if (ImGui::MenuItem("New", "Ctrl+N", false, isEdit))
                         NewScene();
 
-                    if (ImGui::MenuItem("Open...", "Ctrl+O", false))
+                    if (ImGui::MenuItem("Open...", "Ctrl+O", false, isEdit))
                         OpenScene();
 
-                    if (ImGui::MenuItem("Save As...", "Ctrl+S", false))
+                    if (ImGui::MenuItem("Save As...", "Ctrl+S", false, isEdit))
                         SaveSceneAs();
 
                     ImGui::Separator();
@@ -444,7 +440,7 @@ namespace Athena
 
     Entity EditorLayer::GetEntityByCurrentMousePosition()
     {
-        return Entity{};
+        return Entity{};    // TODO: Not implemented
     }
 
     void EditorLayer::OnRender2D()
@@ -590,8 +586,61 @@ namespace Athena
                     renderer2D->DrawLine(p3, p0, selectColor);
                 }
             }
+            // Camera frustum view
+            else if (selectedEntity.HasComponent<CameraComponent>())
+            {
+                const SceneCamera& camera = selectedEntity.GetComponent<CameraComponent>().Camera;
+                const CameraInfo& cInfo = camera.GetCameraInfo();
 
+                float nearClip = cInfo.NearClip;
+                float farClip = cInfo.FarClip;
+                float fov = cInfo.FOV;
+                float aspectRatio = camera.GetAspectRatio();
 
+                std::array<Vector3, 4> nearPlane;
+                std::array<Vector3, 4> farPlane;
+
+                float planeHorHalf = Math::Tan(fov) * nearClip;
+                float planeVertHalf = planeHorHalf / aspectRatio;
+                nearPlane[0] = Vector3::Left() * planeHorHalf  + Vector3::Down() * planeVertHalf;
+                nearPlane[1] = Vector3::Left() * planeHorHalf  + Vector3::Up() * planeVertHalf;
+                nearPlane[2] = Vector3::Right() * planeHorHalf + Vector3::Up() * planeVertHalf;
+                nearPlane[3] = Vector3::Right() * planeHorHalf + Vector3::Down() * planeVertHalf;
+
+                planeHorHalf = Math::Tan(fov) * farClip;
+                planeVertHalf = planeHorHalf / aspectRatio;
+                farPlane[0] = Vector3::Left() * planeHorHalf + Vector3::Down() * planeVertHalf;
+                farPlane[1] = Vector3::Left() * planeHorHalf + Vector3::Up() * planeVertHalf;
+                farPlane[2] = Vector3::Right() * planeHorHalf + Vector3::Up() * planeVertHalf;
+                farPlane[3] = Vector3::Right() * planeHorHalf + Vector3::Down() * planeVertHalf;
+
+                for (uint32 i = 0; i < 4; ++i)
+                {
+                    nearPlane[i] += Vector3::Forward() * nearClip;
+                    farPlane[i] += Vector3::Forward() * farClip;
+
+                    nearPlane[i] = worldTransform.Rotation * nearPlane[i];
+                    farPlane[i] = worldTransform.Rotation * farPlane[i];
+
+                    nearPlane[i] += worldTransform.Translation;
+                    farPlane[i] += worldTransform.Translation;
+                }
+
+                renderer2D->DrawLine(nearPlane[0], nearPlane[1], selectColor);
+                renderer2D->DrawLine(nearPlane[1], nearPlane[2], selectColor);
+                renderer2D->DrawLine(nearPlane[2], nearPlane[3], selectColor);
+                renderer2D->DrawLine(nearPlane[3], nearPlane[0], selectColor);
+
+                renderer2D->DrawLine(farPlane[0], farPlane[1], selectColor);
+                renderer2D->DrawLine(farPlane[1], farPlane[2], selectColor);
+                renderer2D->DrawLine(farPlane[2], farPlane[3], selectColor);
+                renderer2D->DrawLine(farPlane[3], farPlane[0], selectColor);
+
+                renderer2D->DrawLine(nearPlane[0], farPlane[0], selectColor);
+                renderer2D->DrawLine(nearPlane[1], farPlane[1], selectColor);
+                renderer2D->DrawLine(nearPlane[2], farPlane[2], selectColor);
+                renderer2D->DrawLine(nearPlane[3], farPlane[3], selectColor);
+            } 
             // Light Outline
             else if (selectedEntity.HasComponent<PointLightComponent>())
             {
@@ -831,7 +880,7 @@ namespace Athena
         if (m_EditorCtx->SelectedEntity)
             m_EditorCtx->SelectedEntity = m_EditorScene->GetEntityByUUID(m_EditorCtx->SelectedEntity.GetID());
 
-        m_RuntimeScene = nullptr;
+        m_RuntimeScene.Release();
     }
 
     void EditorLayer::OnEvent(Event& event)
@@ -841,29 +890,22 @@ namespace Athena
         auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(VIEWPORT_PANEL_ID);
         const auto& vpDesc = viewportPanel->GetDescription();
 
-        if ((m_EditorCtx->SceneState == SceneState::Edit || m_EditorCtx->SceneState == SceneState::Simulation) && !ImGuizmo::IsUsing())
+        if (m_EditorCtx->SceneState != SceneState::Play && !ImGuizmo::IsUsing())
         {
             bool rightMB = Input::IsMouseButtonPressed(Mouse::Right);
+            CursorMode currentMode = Input::GetCursorMode();
 
-            if (vpDesc.IsHovered)
-            {
-				m_ImGuizmoLayer->OnEvent(event);
+            if (rightMB && currentMode != CursorMode::Normal)
 				m_EditorCamera->OnEvent(event);
-                
-                if(rightMB && !m_HideCursor)
-				{
-					m_HideCursor = true;
-					Application::Get().GetWindow().HideCursor(m_HideCursor);
-				}
-            }
 
-            if (!rightMB && m_HideCursor)
-            {
-				m_HideCursor = false;
-				Application::Get().GetWindow().HideCursor(m_HideCursor);
-            }
+            else if (rightMB && currentMode == CursorMode::Normal && vpDesc.IsHovered)
+                Input::SetCursorMode(CursorMode::Disabled);
+
+            else if (!rightMB && currentMode != CursorMode::Normal)
+                Input::SetCursorMode(CursorMode::Normal);
         }
 
+        m_ImGuizmoLayer->OnEvent(event);
         PanelManager::OnEvent(event);
 
         EventDispatcher dispatcher(event);
@@ -877,13 +919,14 @@ namespace Athena
             return false;
 
         bool ctrl = event.IsCtrlPressed();
+        bool isEdit = m_EditorCtx->SceneState == SceneState::Edit;
 
         switch (event.GetKeyCode())
         {
             // Scenes Management
         case Keyboard::S:
         {
-            if (ctrl)
+            if (ctrl && isEdit)
             {
                 if (m_CurrentScenePath == FilePath())
                     SaveSceneAs();
@@ -892,8 +935,8 @@ namespace Athena
             }
             break;
         }
-        case Keyboard::N: if (ctrl) NewScene(); break;
-        case Keyboard::O: if (ctrl) OpenScene(); break;
+        case Keyboard::N: if (ctrl && isEdit) NewScene(); break;
+        case Keyboard::O: if (ctrl && isEdit) OpenScene(); break;
             
         case Keyboard::F4: if (m_EditorCtx->SceneState == SceneState::Play || m_EditorCtx->SceneState == SceneState::Simulation) OnSceneStop(); break;
         case Keyboard::F5: if (m_EditorCtx->SceneState == SceneState::Edit || m_EditorCtx->SceneState == SceneState::Simulation) OnScenePlay(); break;

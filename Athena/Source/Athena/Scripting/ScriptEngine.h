@@ -84,8 +84,8 @@ namespace Athena
 		static const std::vector<String>& GetAvailableScripts();
 
 		static ScriptFieldMap* GetScriptFieldMap(Entity entity);
-		static void ClearEntityFieldMap(Entity entity);
 
+		static void OnEntityScriptRemove(Entity entity);
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
 

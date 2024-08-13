@@ -305,7 +305,7 @@ namespace Athena
 					if (scriptComponentNode)
 					{
 						auto& script = deserializedEntity.AddComponent<ScriptComponent>();
-						script.Name = scriptComponentNode["Name"].as<String>();
+						script.Name = scriptComponentNode["ScriptName"].as<String>();
 
 						const YAML::Node& scriptFieldsNode = scriptComponentNode["ScriptFields"];
 						if (scriptFieldsNode && ScriptEngine::IsScriptExists(script.Name))
@@ -336,19 +336,23 @@ namespace Athena
 
 								switch (type)
 								{
-								READ_SCRIPT_FIELD(bool, Bool);
-								READ_SCRIPT_FIELD(char, Char);
-								READ_SCRIPT_FIELD(byte, Byte);
-								READ_SCRIPT_FIELD(int16, Int16);
-								READ_SCRIPT_FIELD(int32, Int32);
-								READ_SCRIPT_FIELD(int64, Int64);
+								READ_SCRIPT_FIELD(bool,   Bool);
+								READ_SCRIPT_FIELD(char,   Char);
+								READ_SCRIPT_FIELD(byte,   Byte);
+								READ_SCRIPT_FIELD(int16,  Int16);
+								READ_SCRIPT_FIELD(int32,  Int32);
+								READ_SCRIPT_FIELD(int64,  Int64);
 								READ_SCRIPT_FIELD(uint16, UInt16);
 								READ_SCRIPT_FIELD(uint32, UInt32);
 								READ_SCRIPT_FIELD(uint64, UInt64);
-								READ_SCRIPT_FIELD(float, Float);
+								READ_SCRIPT_FIELD(float,  Float);
 								READ_SCRIPT_FIELD(double, Double);
 								}
 							}
+						}
+						else if (!ScriptEngine::IsScriptExists(script.Name))
+						{
+							ATN_CORE_WARN_TAG("Deserializer", "Uknown script '{}' (script and all fields will be discarded)", script.Name);
 						}
 					}
 				}
@@ -647,7 +651,7 @@ namespace Athena
 		SerializeComponent<ScriptComponent>(out, "ScriptComponent", entity,
 			[entity](YAML::Emitter& output, const ScriptComponent& script)
 			{
-				output << YAML::Key << "Name" << YAML::Value << script.Name;
+				output << YAML::Key << "ScriptName" << YAML::Value << script.Name;
 
 				const ScriptFieldMap* fieldMap = ScriptEngine::GetScriptFieldMap(entity);
 				if (!fieldMap)

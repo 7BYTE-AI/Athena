@@ -377,7 +377,7 @@ Entities:
       Rotation: [1, 0, 0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      Name: FirstPersonCamera
+      ScriptName: FreeCamera
     CameraComponent:
       Camera:
         ProjectionType: 0

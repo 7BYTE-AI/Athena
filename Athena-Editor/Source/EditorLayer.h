@@ -71,7 +71,6 @@ namespace Athena
 		Ref<ImGuizmoLayer> m_ImGuizmoLayer;
 
 		Ref<Titlebar> m_Titlebar;
-		bool m_HideCursor = false;
 
 		Ref<Scene> m_EditorScene, m_RuntimeScene;
 		FilePath m_CurrentScenePath;

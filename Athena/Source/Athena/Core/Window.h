@@ -68,9 +68,6 @@ namespace Athena
 		void SetWindowMode(WindowMode mode);
 		WindowMode GetWindowMode() const { return m_Data.Mode; }
 
-		void HideCursor(bool hide);
-		void SetCursorPosition(Vector2 position);
-
 	public:
 		struct WindowData
 		{

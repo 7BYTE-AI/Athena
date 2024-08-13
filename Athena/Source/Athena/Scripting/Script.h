@@ -49,6 +49,7 @@ namespace Athena
 			return m_Entity.HasComponent<T>();;
 		}
 
+	public:
 		Scene* GetScene() const { return m_Scene; }
 		Entity GetEntity() const { return m_Entity; }
 
@@ -56,6 +57,11 @@ namespace Athena
 		virtual void OnCreate() {};
 		virtual void OnUpdate(Time frameTime) {};
 		virtual void GetFieldsDescription(ScriptFieldMap* outFieldsDesc) {};
+
+	protected:
+		Entity Instantiate() const { return m_Scene->CreateEntity(); }
+		Entity FindEntityByName(const String& name) const { return m_Scene->FindEntityByName(name); }
+		Entity FindEntityByUUID(UUID id) const { return m_Scene->GetEntityByUUID(id); }
 
 	private:
 		friend class ATHENA_API ScriptEngine;

@@ -179,7 +179,7 @@ namespace Athena
 		}
 
 		if (entity.HasComponent<ScriptComponent>())
-			ScriptEngine::ClearEntityFieldMap(entity);
+			ScriptEngine::OnEntityScriptRemove(entity);
 
 		m_EntityMap.erase(entity.GetID());
 		m_Registry.destroy(entity);

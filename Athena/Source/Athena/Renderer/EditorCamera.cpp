@@ -367,12 +367,12 @@ namespace Athena
 
 	float FirstPersonCamera::MoveSpeed() const
 	{
-		return 50.f * m_MoveSpeedLevel;
+		return 100.f * m_MoveSpeedLevel;
 	}
 
 	float FirstPersonCamera::RotationSpeed() const
 	{
-		return 0.001f;
+		return 0.0015f;
 	}
 
 	float FirstPersonCamera::ZoomSpeed() const

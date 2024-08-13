@@ -7,10 +7,10 @@ using namespace Athena;
 
 namespace Sandbox
 {
-	class FirstPersonCamera : public Script
+	class TestScript : public Script
 	{
 	public:
-		FirstPersonCamera();
+		TestScript();
 
 	private:
 		virtual void OnCreate() override;
@@ -19,5 +19,6 @@ namespace Sandbox
 
 	private:
 		float m_Speed = 1.f;
+		char m_Character = 'K';
 	};
 }
