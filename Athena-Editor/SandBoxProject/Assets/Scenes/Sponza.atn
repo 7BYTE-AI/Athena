@@ -364,7 +364,7 @@ Entities:
       LOD: 1.06500006
       Resolution: 256
       Type: 1
-      FilePath: Assets\EnvironmentMaps\pink_sunrise_4k.hdr
+      FilePath: SandBoxProject\Assets\EnvironmentMaps\pink_sunrise_4k.hdr
       Turbidity: 2.29299998
       Azimuth: 0.224000007
       Inclination: 1.39100003
@@ -398,7 +398,7 @@ Entities:
       Rotation: [1, 0, 0, 0]
       Scale: [0.057190001, 0.0571899563, 0.0571899563]
     StaticMeshComponent:
-      FilePath: Assets\Meshes\Sponza.fbx
+      FilePath: SandBoxProject\Assets\Meshes\Sponza.fbx
       Visible: true
   - IDComponent:
       ID: 18100746580937150330

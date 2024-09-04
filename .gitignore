@@ -1,17 +1,17 @@
 
 Build/*
-Athena-Editor/Assets/Scripts/Build/*
+Athena-Editor/SandBoxProject/Scripts/Build/*
 
 Athena/EngineResources/Cache/
 Athena-Editor/Screenshots/
 
 # Exclude ScriptsLibrary.dll
-!Athena-Editor/Assets/Scripts/Build/Binaries/
-Athena-Editor/Assets/Scripts/Build/Binaries/*
-!Athena-Editor/Assets/Scripts/Build/Binaries/ScriptsLibrary/
-Athena-Editor/Assets/Scripts/Build/Binaries/ScriptsLibrary/*
-!Athena-Editor/Assets/Scripts/Build/Binaries/ScriptsLibrary/ScriptsLibrary.dll
-!Athena-Editor/Assets/Scripts/Build/Binaries/ScriptsLibrary/ScriptsLibrary-d.dll
+!Athena-Editor/SandBoxProject/Scripts/Build/Binaries/
+Athena-Editor/SandBoxProject/Scripts/Build/Binaries/*
+!Athena-Editor/SandBoxProject/Scripts/Build/Binaries/ScriptsLibrary/
+Athena-Editor/SandBoxProject/Scripts/Build/Binaries/ScriptsLibrary/*
+!Athena-Editor/SandBoxProject/Scripts/Build/Binaries/ScriptsLibrary/ScriptsLibrary.dll
+!Athena-Editor/SandBoxProject/Scripts/Build/Binaries/ScriptsLibrary/ScriptsLibrary-d.dll
 
 *.log
 *.rsp

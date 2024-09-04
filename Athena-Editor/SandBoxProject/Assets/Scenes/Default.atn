@@ -1,0 +1,206 @@
+Scene: Default
+Entities:
+  - IDComponent:
+      ID: 17196797334220725082
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [22.7587872, 8.80202866, -0.201162726]
+      Rotation: [0.707215667, -0.0916094109, 0.695225716, 0.0900827795]
+      Scale: [0.999998689, 0.999999881, 0.999998093]
+    ScriptComponent:
+      ScriptName: FreeCamera
+      ScriptFields:
+        - Name: m_MoveSpeed
+          Type: Float
+          Data: 5
+        - Name: m_RotationSpeed
+          Type: Float
+          Data: 2
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.52359879
+        PerspectiveNearClip: 1
+        PerspectiveFarClip: 100
+        OrthographicSize: 10
+        OrthographicNearClip: -1
+        OrthographicFarClip: 10
+      Primary: true
+      FixedAspectRatio: false
+  - IDComponent:
+      ID: 3148190026798035267
+    TagComponent:
+      Tag: PinkLight
+    TransformComponent:
+      Translation: [0.386712313, 4.60944796, -8.20694351]
+      Rotation: [1, 0, 0, 0]
+      Scale: [0.75999999, 0.75999999, 0.75999999]
+    ParentComponent:
+      Parent: 2151942939999983161
+    PointLightComponent:
+      Color: [0.93670845, 0, 1, 1]
+      Intensity: 5
+      Radius: 7
+      FallOff: 1
+  - IDComponent:
+      ID: 9434107904280492893
+    TagComponent:
+      Tag: StarWarsTrouper
+    TransformComponent:
+      Translation: [-6.50545168, 0.288609385, 4.93492746]
+      Rotation: [0.502464473, -0.000320172985, 0.864593506, 0.00272599282]
+      Scale: [8.59379864, 8.59389496, 8.59405422]
+    ParentComponent:
+      Parent: 2151942939999983161
+    StaticMeshComponent:
+      FilePath: SandBoxProject\Assets\Meshes\StormTrooper\silly_dancing.fbx
+      Visible: true
+  - IDComponent:
+      ID: 2151942939999983161
+    TagComponent:
+      Tag: Primitives
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [1, 0, 0, 0]
+      Scale: [0.147900015, 0.147900015, 0.147900015]
+    StaticMeshComponent:
+      FilePath: SandBoxProject\Assets\Meshes\BlenderScene.fbx
+      Visible: true
+  - IDComponent:
+      ID: 6684149830295041235
+    TagComponent:
+      Tag: GreenSpotLight
+    TransformComponent:
+      Translation: [4.63184881, 6.35351419, 15.9331255]
+      Rotation: [0.935840547, -0.352423757, 0, 0]
+      Scale: [1, 0.999996781, 0.416792005]
+    ParentComponent:
+      Parent: 2151942939999983161
+    SpotLightComponent:
+      Color: [0.173303723, 0.91452992, 0.128766462, 1]
+      Intensity: 12.6000004
+      SpotAngle: 48.0859985
+      InnerFallOff: 1
+      Range: 30
+      RangeFallOff: 1
+  - IDComponent:
+      ID: 15405863294050703898
+    TagComponent:
+      Tag: BlueLight
+    TransformComponent:
+      Translation: [-5.80263138, 4.26446819, -8.69014168]
+      Rotation: [1, 0, 0, 0]
+      Scale: [1, 1, 1]
+    ParentComponent:
+      Parent: 2151942939999983161
+    PointLightComponent:
+      Color: [0, 0.0323889256, 1, 1]
+      Intensity: 5
+      Radius: 7
+      FallOff: 1
+  - IDComponent:
+      ID: 2835139583361043602
+    TagComponent:
+      Tag: RedLight
+    TransformComponent:
+      Translation: [6.87751675, 4.60593796, -8.87488174]
+      Rotation: [1, 0, 0, 0]
+      Scale: [1, 1, 1]
+    ParentComponent:
+      Parent: 2151942939999983161
+    PointLightComponent:
+      Color: [1, 0, 0, 1]
+      Intensity: 10.3999996
+      Radius: 7
+      FallOff: 1
+  - IDComponent:
+      ID: 14844919457741134000
+    TagComponent:
+      Tag: DirectionalLight
+    TransformComponent:
+      Translation: [-4.76235437, 10.0545406, 0.705213785]
+      Rotation: [0.331707746, -0.932052374, -0.055727344, -0.134695753]
+      Scale: [1, 1.00003445, 1.00003266]
+    DirectionalLightComponent:
+      Color: [1, 1, 1, 1]
+      Intensity: 1
+      CastShadows: true
+      LightSize: 0.150000006
+  - IDComponent:
+      ID: 9453339502114578766
+    TagComponent:
+      Tag: SkyLight
+    TransformComponent:
+      Translation: [0.617748141, 9.80921936, 0]
+      Rotation: [1, 0, 0, 0]
+      Scale: [1, 1, 1]
+    SkyLightComponent:
+      Intensity: 0.800000012
+      LOD: 0
+      Resolution: 256
+      Type: 2
+      FilePath: SandBoxProject\Assets\EnvironmentMaps\pink_sunrise_4k.hdr
+      Turbidity: 2.6329999
+      Azimuth: 4.91800022
+      Inclination: 1.32000005
+  - IDComponent:
+      ID: 15204102483634061799
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Translation: [0, 2.52208328, -12.2381773]
+      Rotation: [1, 0, 0, 0]
+      Scale: [10.8226433, 8.20835114, 0.62229377]
+    StaticMeshComponent:
+      FilePath: SandBoxProject\Assets\Meshes\Cube.obj
+      Visible: true
+  - IDComponent:
+      ID: 4442543154444817618
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Translation: [-1.31703436, 2.98000145, 3.50187826]
+      Rotation: [1, 0, 0, 0]
+      Scale: [1, 2.77572393, 1]
+    ScriptComponent:
+      ScriptName: TestScript
+      ScriptFields:
+        - Name: m_Speed
+          Type: Float
+          Data: 0.200000003
+    StaticMeshComponent:
+      FilePath: SandBoxProject\Assets\Meshes\Cube.obj
+      Visible: true
+  - IDComponent:
+      ID: 16471898377765283841
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Translation: [0.438165843, 6.87918901, -2.26552606]
+      Rotation: [0.978859007, 0.108237937, -0.0959274396, 0.144629061]
+      Scale: [1, 0.99999994, 1]
+    StaticMeshComponent:
+      FilePath: SandBoxProject\Assets\Meshes\Cube.obj
+      Visible: true
+  - IDComponent:
+      ID: 1454649843796548308
+    TagComponent:
+      Tag: Text
+    TransformComponent:
+      Translation: [-10.467454, 8.2166605, 0.643565178]
+      Rotation: [1, 0, 0, 0]
+      Scale: [0.141000018, 0.141000018, 0.141000018]
+    ParentComponent:
+      Parent: 15204102483634061799
+    TextComponent:
+      Text: "Athena \nИлья\x00\x00я Ішфіаарівто\x00"
+      Font: SandBoxProject\Assets\Fonts\comic.ttf
+      Space: 1
+      Color: [1, 1, 1, 1]
+      MaxWidth: 10
+      Kerning: 0
+      LineSpacing: -0.100000001
+      Shadowing: false
+      ShadowDistance: 1
+      ShadowColor: [0, 0, 0, 1]

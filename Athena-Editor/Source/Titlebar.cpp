@@ -1,7 +1,7 @@
 #include "Titlebar.h"
 
 #include "Athena/Core/Application.h"
-
+#include "Athena/Project/Project.h"
 #include "Athena/UI/UI.h"
 #include "Athena/UI/Theme.h"
 
@@ -13,9 +13,8 @@
 
 namespace Athena
 {
-    Titlebar::Titlebar(const String& name, const Ref<EditorContext>& editorCtx)
+    Titlebar::Titlebar(const Ref<EditorContext>& editorCtx)
     {
-        m_Name = name;
         m_EditorCtx = editorCtx;
     }
 
@@ -120,12 +119,14 @@ namespace Athena
         
         // Centered Window title
         {
+            String name = Project::GetActive()->GetConfig().Name;
+
             ImVec2 currentCursorPos = ImGui::GetCursorPos();
-            ImVec2 textSize = ImGui::CalcTextSize(m_Name.c_str());
+            ImVec2 textSize = ImGui::CalcTextSize(name.c_str());
             ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - textSize.x * 0.5f, 2.0f + windowPadding.y + 2.0f));
 
             UI::PushFont(UI::Fonts::Default22);
-            ImGui::Text("%s", m_Name.c_str());
+            ImGui::Text("%s", name.c_str());
             UI::PopFont();
 
             ImGui::SetCursorPos(currentCursorPos);

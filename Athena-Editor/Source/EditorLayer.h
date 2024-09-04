@@ -23,6 +23,8 @@ namespace Athena
 	struct EditorConfig
 	{
 		FilePath EditorResources;
+		bool SelectProjectManually = false;
+		FilePath StartProject;
 	};
 
 	class EditorLayer : public Layer
@@ -44,7 +46,8 @@ namespace Athena
 		void OnRender2D();
 		void DrawAboutModal();
 		void DrawThemeEditor();
-		void DrawCreateScriptModal();
+		void DrawNewProjectModal();
+		void DrawNewScriptModal();
 
 		Entity GetEntityByCurrentMousePosition();
 
@@ -61,6 +64,13 @@ namespace Athena
 		void OpenScene();
 		void OpenScene(const FilePath& path);
 
+		void NewProject(const String& name, const FilePath& path);
+		bool OpenProject();
+		void OpenProject(const FilePath& path);
+		void SaveProject();
+
+		void SaveAll();
+
 	private:
 		EditorConfig m_Config;
 
@@ -74,5 +84,6 @@ namespace Athena
 
 		Ref<Scene> m_EditorScene, m_RuntimeScene;
 		FilePath m_CurrentScenePath;
+		bool m_IsUIInitialized = false;
 	};
 }

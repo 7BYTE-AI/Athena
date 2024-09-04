@@ -1,8 +1,8 @@
 #include "ContentBrowserPanel.h"
 
 #include "Athena/Core/FileSystem.h"
+#include "Athena/Project/Project.h"
 #include "Athena/Renderer/Texture.h"
-
 #include "Athena/UI/UI.h"
 #include "Athena/UI/Theme.h"
 
@@ -140,12 +140,13 @@ namespace Athena
 
 	void ContentBrowserPanel::Refresh()
 	{
+		m_AssetDirectory = Project::GetAssetDirectory();
 		String currentFilePath = m_CurrentNode != nullptr ? m_CurrentNode->FilePath : String();
 
 		m_TreeRoot = TreeNode();
 
 		m_TreeRoot.IsFolder = true;
-		m_TreeRoot.FilePath = m_AssetDirectory;
+		m_TreeRoot.FilePath = m_AssetDirectory.string();
 		m_TreeRoot.FileName = FilePath(m_TreeRoot.FilePath).filename().string();
 		m_TreeRoot.ParentNode = nullptr;
 

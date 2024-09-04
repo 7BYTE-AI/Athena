@@ -24,50 +24,26 @@ namespace Athena
 		static_assert(!std::is_same_v<T, T>, "Not supported type for script field!");
 	};
 
-	template <>
-	struct ScriptFieldTypeMapper<bool>    { static constexpr ScriptFieldType Value = ScriptFieldType::Bool; };
-
-	template <>
-	struct ScriptFieldTypeMapper<char>    { static constexpr ScriptFieldType Value = ScriptFieldType::Char; };
-
-	template <>
-	struct ScriptFieldTypeMapper<byte>    { static constexpr ScriptFieldType Value = ScriptFieldType::Byte; };
-
-	template <>
-	struct ScriptFieldTypeMapper<int16>   { static constexpr ScriptFieldType Value = ScriptFieldType::Int16; };
-
-	template <>
-	struct ScriptFieldTypeMapper<int32>   { static constexpr ScriptFieldType Value = ScriptFieldType::Int32; };
-
-	template <>
-	struct ScriptFieldTypeMapper<int64>   { static constexpr ScriptFieldType Value = ScriptFieldType::Int64; };
-
-	template <>
-	struct ScriptFieldTypeMapper<uint16>  { static constexpr ScriptFieldType Value = ScriptFieldType::UInt16; };
-
-	template <>
-	struct ScriptFieldTypeMapper<uint32>  { static constexpr ScriptFieldType Value = ScriptFieldType::UInt32; };
-
-	template <>
-	struct ScriptFieldTypeMapper<uint64>  { static constexpr ScriptFieldType Value = ScriptFieldType::UInt64; };
-
-	template <>
-	struct ScriptFieldTypeMapper<float>   { static constexpr ScriptFieldType Value = ScriptFieldType::Float; };
-
-	template <>
-	struct ScriptFieldTypeMapper<double>  { static constexpr ScriptFieldType Value = ScriptFieldType::Double; };
-
-	template <>
-	struct ScriptFieldTypeMapper<Vector2> { static constexpr ScriptFieldType Value = ScriptFieldType::Vector2; };
-
-	template <>
-	struct ScriptFieldTypeMapper<Vector3> { static constexpr ScriptFieldType Value = ScriptFieldType::Vector3; };
-
-	template <>
-	struct ScriptFieldTypeMapper<Vector4> { static constexpr ScriptFieldType Value = ScriptFieldType::Vector4; };
-
 	template <typename T>
 	inline constexpr ScriptFieldType ScriptFieldTypeMapper_V = ScriptFieldTypeMapper<T>::Value;
+
+#define ADD_SCRIPT_FIELD_TYPE(nativeType, fieldType) template <> struct ScriptFieldTypeMapper<nativeType> \
+	{ static constexpr ScriptFieldType Value = ScriptFieldType::fieldType; };	\
+
+	ADD_SCRIPT_FIELD_TYPE(bool,    Bool);
+	ADD_SCRIPT_FIELD_TYPE(char,    Char);
+	ADD_SCRIPT_FIELD_TYPE(byte,    Byte);
+	ADD_SCRIPT_FIELD_TYPE(int16,   Int16);
+	ADD_SCRIPT_FIELD_TYPE(int32,   Int32);
+	ADD_SCRIPT_FIELD_TYPE(int64,   Int64);
+	ADD_SCRIPT_FIELD_TYPE(uint16,  UInt16);
+	ADD_SCRIPT_FIELD_TYPE(uint32,  UInt32);
+	ADD_SCRIPT_FIELD_TYPE(uint64,  UInt64);
+	ADD_SCRIPT_FIELD_TYPE(float,   Float);
+	ADD_SCRIPT_FIELD_TYPE(double,  Double);
+	ADD_SCRIPT_FIELD_TYPE(Vector2, Vector2);
+	ADD_SCRIPT_FIELD_TYPE(Vector3, Vector3);
+	ADD_SCRIPT_FIELD_TYPE(Vector4, Vector4);
 
 
 	class ScriptFieldStorage
@@ -106,6 +82,12 @@ namespace Athena
 			m_Size = other.m_Size;
 			memcpy(m_Buffer, other.m_Buffer, sizeof(m_Buffer));
 			return *this;
+		}
+
+		void GetInitialValue()
+		{
+			ATN_CORE_ASSERT(m_FieldReference);
+			memcpy(m_Buffer, m_FieldReference, m_Size);
 		}
 
 		template<typename T>

@@ -36,8 +36,6 @@ namespace Athena
 		appinfo.RendererConfig.API = Renderer::API::Vulkan;
 		appinfo.RendererConfig.MaxFramesInFlight = 3;
 
-		appinfo.ScriptConfig.ScriptsPath = "Assets/Scripts";
-		appinfo.ScriptConfig.ScriptsBinaryPath = "Assets/Scripts/Build/Binaries/ScriptsLibrary/ScriptsLibrary.dll";
 		appinfo.ScriptConfig.EnableDebug = true;
 
 		appinfo.WindowInfo.Width = 1600;
@@ -52,7 +50,9 @@ namespace Athena
 		Application* application = new AthenaEditor(appinfo);
 		
 		EditorConfig editorConfig;
-		editorConfig.EditorResources = "EditorResources/";
+		editorConfig.EditorResources = "EditorResources";
+		editorConfig.SelectProjectManually = false;
+		editorConfig.StartProject = "SandBoxProject/SandBox.atproj";
 
 		application->PushLayer(Ref<EditorLayer>::Create(editorConfig));
 

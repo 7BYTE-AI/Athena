@@ -55,7 +55,7 @@ namespace Athena
         if (font == nullptr)
         {
             ATN_CORE_ERROR_TAG("Renderer", "Failed to load font from {}!", result->m_FilePath);
-            return nullptr;
+            return Font::GetDefault();
         }
 
         // From imgui_draw.cpp

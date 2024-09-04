@@ -18,6 +18,7 @@ namespace Athena
 		ContentBrowserPanel(std::string_view name, const Ref<EditorContext>& context);
 
 		virtual void OnImGuiRender() override;
+		void Refresh();
 
 	private:
 		struct TreeNode
@@ -30,7 +31,6 @@ namespace Athena
 		};
 
 	private:
-		void Refresh();
 		void ReloadTreeHierarchy(const FilePath& srcDirectory);
 		TreeNode* FindTreeNode(TreeNode& root, const String& path);
 
@@ -43,7 +43,7 @@ namespace Athena
 		String m_SearchString;
 		std::vector<TreeNode*> m_SearchResult;
 
-		const std::string_view m_AssetDirectory = "Assets";
+		FilePath m_AssetDirectory;
 
 		const ImVec2 m_ButtonSize = { 16.f, 16.f };
 		const ImVec2 m_ItemSize = { 96.f, 96.f };

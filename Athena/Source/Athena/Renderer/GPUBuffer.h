@@ -247,6 +247,9 @@ namespace Athena
 
 		void Push(const void* data, uint64 size)
 		{
+			if (size == 0)
+				return;
+
 			uint64 newOffset = m_DataOffset + size;
 
 			if (m_CPUBuffer.size() < newOffset)
@@ -263,6 +266,9 @@ namespace Athena
 
 		void Flush()
 		{
+			if (m_DataOffset == 0)
+				return;
+
 			// Increase size if not enough
 			if (m_GPUBuffer->GetSize() < m_DataOffset)
 			{

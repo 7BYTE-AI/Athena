@@ -28,7 +28,7 @@ namespace Athena
 
 	private:
 		FilePath m_FilePath;
-		FontGeometry* m_FontGeometry;
+		FontGeometry* m_FontGeometry = nullptr;
 		Ref<Texture2D> m_AtlasTexture;
 	};
 }

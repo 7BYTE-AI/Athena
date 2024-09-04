@@ -68,8 +68,6 @@ namespace Athena
 
 	struct ScriptConfig
 	{
-		FilePath ScriptsPath;
-		FilePath ScriptsBinaryPath;
 		bool EnableDebug;
 	};
 
@@ -79,6 +77,7 @@ namespace Athena
 		static void Init(const ScriptConfig& config);
 		static void Shutdown();
 
+		static void InitProject();
 		static void ReloadScripts();
 		static bool IsScriptExists(const String& name);
 		static const std::vector<String>& GetAvailableScripts();

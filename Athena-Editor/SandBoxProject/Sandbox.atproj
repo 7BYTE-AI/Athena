@@ -1,0 +1,6 @@
+Project:
+  Name: SandBox
+  StartScene: "Scenes/Default.atn"
+  ScriptsBinaryPath: ""
+  AthenaSourceDirectory: ""
+  AthenaBinaryPath: ""

@@ -2,6 +2,7 @@
 
 #include "Athena/Core/Application.h"
 #include "Athena/Core/PlatformUtils.h"
+#include "Athena/Project/Project.h"
 #include "Athena/Scene/Entity.h"
 #include "Athena/Scene/Components.h"
 #include "Athena/Scripting/Script.h"
@@ -17,6 +18,7 @@ namespace Athena
 	struct ScriptEngineData
 	{
 		ScriptConfig Config;
+		FilePath ScriptsBinaryPath;
 		Scope<Library> ScriptsLibrary;
 
 		std::vector<String> ScriptNames;
@@ -107,8 +109,7 @@ namespace Athena
 			{
 				for (auto& [name, storage] : m_FieldsDescription)
 				{
-					// Request for initial value
-					storage.GetValue<bool>();
+					storage.GetInitialValue();
 					storage.RemoveFieldReference();
 				}
 
@@ -183,29 +184,25 @@ namespace Athena
 	{
 		s_Data = new ScriptEngineData();
 		s_Data->Config = config;
-
-		if (!FileSystem::Exists(config.ScriptsPath))
-		{
-			ATN_CORE_ERROR_TAG("SriptEngine", "Scripts folder does not exists {}!", config.ScriptsPath);
-			return;
-		}
-
-#ifdef ATN_DEBUG // This will search for scripting binary with MDd
-		FilePath debugBinaryPath = s_Data->Config.ScriptsBinaryPath;
-		debugBinaryPath = debugBinaryPath.parent_path() / FilePath(debugBinaryPath.stem().string() + "-d" + debugBinaryPath.extension().string());
-		s_Data->Config.ScriptsBinaryPath = debugBinaryPath;
-#endif
-
-#ifndef ATN_DIST
-		GenerateCMakeConfig();
-#endif
-
-		ReloadScripts();
 	}
 
 	void ScriptEngine::Shutdown()
 	{
 		delete s_Data;
+	}
+
+	void ScriptEngine::InitProject()
+	{
+#ifdef ATN_DEBUG // This will search for scripting binary with MDd
+		FilePath debugBinaryPath = Project::GetScriptsBinaryPath();
+		debugBinaryPath = debugBinaryPath.parent_path() / FilePath(debugBinaryPath.stem().string() + "-d" + debugBinaryPath.extension().string());
+		s_Data->ScriptsBinaryPath = debugBinaryPath;
+#else
+		s_Data->ScriptsBinaryPath = Project::GetScriptsBinaryPath();
+#endif
+
+		GenerateCMakeConfig();
+		ReloadScripts();
 	}
 
 	void ScriptEngine::LoadAssembly()
@@ -224,8 +221,8 @@ namespace Athena
 		s_Data->ReloadPending = true;
 
 		// Create copy of dll and pdb to read from it, original dll and pdb for writing
-		const FilePath& libPath = s_Data->Config.ScriptsBinaryPath;
-		FilePath pdbPath = s_Data->Config.ScriptsBinaryPath;
+		const FilePath& libPath = s_Data->ScriptsBinaryPath;
+		FilePath pdbPath = s_Data->ScriptsBinaryPath;
 		pdbPath.replace_extension("pdb");
 
 		FilePath activeFolder = libPath.parent_path() / "Active";
@@ -273,7 +270,7 @@ namespace Athena
 			return;
 		}
 
-		FilePath sourceDir = s_Data->Config.ScriptsPath / "Source";
+		FilePath sourceDir = Project::GetScriptsDirectory() / "Source";
 
 		if (!FileSystem::Exists(sourceDir))
 		{
@@ -445,6 +442,13 @@ namespace Athena
 
 		if (s_Data->ScriptClasses.contains(scriptName))
 		{
+			// Initialize entity script at runtime
+			if (!s_Data->EntityInstances.contains(entity.GetID()))
+			{
+				InstantiateEntity(entity);
+				OnCreateEntity(entity);
+			}
+
 			s_Data->EntityInstances.at(entity.GetID()).InvokeOnUpdate(frameTime);
 		}
 	}
@@ -472,7 +476,7 @@ namespace Athena
 		Utils::ReplaceAll(configSource, "<REPLACE_USE_DEBUG_RUNTIME_LIBS>", "OFF");
 #endif
 
-		FilePath configPath = s_Data->Config.ScriptsPath / "Config.cmake";
+		FilePath configPath = Project::GetScriptsDirectory() / "Config.cmake";
 		bool generate = !FileSystem::Exists(configPath);
 
 		if (!generate)
@@ -510,7 +514,7 @@ namespace Athena
 			return;
 		}
 
-		FilePath srcPath = s_Data->Config.ScriptsPath / "Source";
+		FilePath srcPath = Project::GetScriptsDirectory() / "Source";
 
 		{
 			String headerSource = FileSystem::ReadFile(headerTemplate);
@@ -540,20 +544,20 @@ namespace Athena
 		const String projectName = "Sandbox"; // Temporary
 
 		FilePath solutionName = fmt::format("{}.sln", projectName);
-		FilePath solutionPath = s_Data->Config.ScriptsPath / "Build/Projects" / solutionName;
+		FilePath solutionPath = Project::GetScriptsDirectory() / "Build/Projects" / solutionName;
 
 		if (!FileSystem::Exists(solutionPath))
 			GenCMakeProjects();
 
 		if (FileSystem::Exists(solutionPath))
-			Platform::RunFile(solutionName, s_Data->Config.ScriptsPath / "Build/Projects");
+			Platform::RunFile(solutionName, Project::GetScriptsDirectory() / "Build/Projects");
 		else
 			ATN_CORE_ERROR_TAG("ScriptEngine", "Failed to open solution file!");
 	}
 
 	void ScriptEngine::GenCMakeProjects()
 	{
-		Platform::RunFile("VS2022-GenProjects.bat", s_Data->Config.ScriptsPath);
+		Platform::RunFile("VS2022-GenProjects.bat", Project::GetScriptsDirectory());
 	}
 
 	void ScriptEngine::FindScripts(const FilePath& dir, std::vector<String>& scriptsNames)

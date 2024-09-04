@@ -498,9 +498,9 @@ namespace Athena
 		if (aiscene == nullptr)
 		{
 			const char* error = aiGetErrorString();
-			ATN_CORE_ERROR_TAG("StaticMesh", "Failed to load mesh from '{}'", path);
-			ATN_CORE_INFO("Error: {}", error);
-			return nullptr;
+			ATN_CORE_ERROR_TAG("Mesh", "Failed to load mesh from {}", path);
+			ATN_CORE_ERROR("	Assimp Error: {}", error);
+			return Ref<StaticMesh>::Create();
 		}
 
 		Ref<StaticMesh> result = Ref<StaticMesh>::Create();

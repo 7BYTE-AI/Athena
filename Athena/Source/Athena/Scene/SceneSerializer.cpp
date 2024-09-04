@@ -591,7 +591,7 @@ namespace Athena
 		}
 		catch (const YAML::Exception& ex)
 		{
-			ATN_CORE_ERROR_TAG("SceneSerializer", "Failed to deserialize scene '{0}'\n {1}", path, ex.what());
+			ATN_CORE_ERROR_TAG("Serializer", "Failed to deserialize scene '{0}'\n {1}", path, ex.what());
 			return false;
 		}
 
@@ -616,7 +616,7 @@ namespace Athena
 	{
 		if (!entity.HasComponent<IDComponent>() && !entity.HasComponent<TagComponent>())
 		{
-			ATN_CORE_ERROR_TAG("SceneSerializer", "Entity cannot been serialized(does not have UUIDComponent and TagComponent)");
+			ATN_CORE_ERROR_TAG("Serializer", "Entity cannot been serialized(does not have UUIDComponent and TagComponent)");
 			return;
 		}
 

@@ -12,7 +12,7 @@ namespace Athena
 	class Titlebar : public RefCounted
 	{
 	public:
-		Titlebar(const String& name, const Ref<EditorContext>& editorCtx);
+		Titlebar(const Ref<EditorContext>& editorCtx);
 
 		void OnImGuiRender();
 		void SetMenubarCallback(const std::function<void()>& callback) { m_MenubarCallback = callback; }
@@ -21,7 +21,6 @@ namespace Athena
 		float GetHeight() { return m_Height; }
 
 	private:
-		String m_Name;
 		Ref<EditorContext> m_EditorCtx;
 		bool m_Hovered;
 		const float m_Height = 58.f;

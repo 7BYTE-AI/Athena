@@ -5,8 +5,8 @@
 #include "Athena/Core/PlatformUtils.h"
 #include "Athena/Asset/TextureImporter.h"
 #include "Athena/ImGui/ImGuiLayer.h"
-
 #include "Athena/Input/Input.h"
+#include "Athena/Project/Project.h"
 
 #include "Athena/Renderer/SceneRenderer.h"
 #include "Athena/Renderer/SceneRenderer2D.h"
@@ -46,8 +46,26 @@ namespace Athena
         m_EditorCtx->SceneState = SceneState::Edit;
         m_EditorCtx->SelectedEntity = {};
 
-        m_EditorScene = Ref<Scene>::Create();
-        m_EditorCtx->ActiveScene = m_EditorScene;
+        if (m_Config.SelectProjectManually)
+        {
+            if (!OpenProject())
+            {
+                // TODO: Editor Launcher
+#if 1
+                NewProject("SandBox", "SandBoxProject/");
+#else
+                Application::Get().Close();
+                return;
+#endif
+            }
+        }
+        else
+        {
+            OpenProject(m_Config.StartProject);
+        }
+
+        if (m_EditorCtx->ActiveScene == nullptr)
+            NewScene();
 
         m_ViewportRenderer = SceneRenderer::Create();
         m_Renderer2D = SceneRenderer2D::Create(m_ViewportRenderer->GetRender2DPass());
@@ -60,14 +78,9 @@ namespace Athena
         
         m_EditorCamera = Ref<FirstPersonCamera>::Create(Math::Radians(45.f), 16.f / 9.f, 1.f, 200.f);
 
-        EditorResources::Init(m_Config.EditorResources);
-
-        Application::Get().GetImGuiLayer()->BlockEvents(false);
-        Application::Get().GetWindow().SetTitlebarHitTestCallback([this]() { return m_Titlebar->IsHovered(); });
-
-        m_ImGuizmoLayer = Ref<ImGuizmoLayer>::Create(m_EditorCtx, m_EditorCamera);
         InitUI();
-#if 1
+
+#if 0
         OpenScene("Assets/Scenes/Default.atn");
 #endif
     }
@@ -172,8 +185,11 @@ namespace Athena
         if (UI::BeginPopupModal("Theme Editor"))
             DrawThemeEditor();
 
-        if (UI::BeginPopupModal("Create New Script"))
-            DrawCreateScriptModal();
+        if (UI::BeginPopupModal("New Project"))
+            DrawNewProjectModal();
+
+        if (UI::BeginPopupModal("New Script"))
+            DrawNewScriptModal();
 
         ImGui::End();
 
@@ -208,11 +224,19 @@ namespace Athena
 
     void EditorLayer::InitUI()
     {
+        EditorResources::Init(m_Config.EditorResources);
+
+        Application::Get().GetImGuiLayer()->BlockEvents(false);
+        Application::Get().GetWindow().SetTitlebarHitTestCallback([this]() { return m_Titlebar->IsHovered(); });
+
+        m_ImGuizmoLayer = Ref<ImGuizmoLayer>::Create(m_EditorCtx, m_EditorCamera);
+
         UI::RegisterPopup("About", true);
         UI::RegisterPopup("Theme Editor");
-        UI::RegisterPopup("Create New Script", true);
+        UI::RegisterPopup("New Project", true);
+        UI::RegisterPopup("New Script", true);
 
-        m_Titlebar = Ref<Titlebar>::Create(Application::Get().GetConfig().Name, m_EditorCtx);
+        m_Titlebar = Ref<Titlebar>::Create(m_EditorCtx);
 
         m_Titlebar->SetMenubarCallback([this]()
             {
@@ -220,17 +244,32 @@ namespace Athena
                 {
                     bool isEdit = m_EditorCtx->SceneState == SceneState::Edit;
 
-                    if (ImGui::MenuItem("New", "Ctrl+N", false, isEdit))
+                    if (ImGui::MenuItem("New Project", NULL, false))
+                        UI::OpenPopup("New Project");
+
+                    if (ImGui::MenuItem("Open Project...", NULL, false))
+                        OpenProject();
+
+                    if (ImGui::MenuItem("Save Project", NULL, false))
+                        SaveProject();
+
+                    ImGui::Separator();
+                    ImGui::Spacing();
+
+                    if (ImGui::MenuItem("New Scene", NULL, false, isEdit))
                         NewScene();
 
-                    if (ImGui::MenuItem("Open...", "Ctrl+O", false, isEdit))
+                    if (ImGui::MenuItem("Open Scene...", NULL, false, isEdit))
                         OpenScene();
 
-                    if (ImGui::MenuItem("Save As...", "Ctrl+S", false, isEdit))
+                    if (ImGui::MenuItem("Save Scene As...", NULL, false, isEdit))
                         SaveSceneAs();
 
                     ImGui::Separator();
                     ImGui::Spacing();
+
+                    if (ImGui::MenuItem("Save All", "Ctrl+S", false, isEdit))
+                        SaveAll();
 
                     if (ImGui::MenuItem("Exit", NULL, false))
                         Application::Get().Close();
@@ -282,9 +321,9 @@ namespace Athena
                         ScriptEngine::ReloadScripts();
                     }
 
-                    if (ImGui::MenuItem("Create Script ..."))
+                    if (ImGui::MenuItem("New Script"))
                     {
-                        UI::OpenPopup("Create New Script");
+                        UI::OpenPopup("New Script");
                     }
 #ifdef ATN_PLATFORM_WINDOWS
                     if (ImGui::MenuItem("Open In Visual Studio"))
@@ -436,6 +475,8 @@ namespace Athena
         auto profilingPanel = Ref<ProfilingPanel>::Create(PROFILING_PANEL_ID, m_EditorCtx);
         profilingPanel->SetContext(m_ViewportRenderer);
         PanelManager::AddPanel(profilingPanel, Keyboard::K);
+
+        m_IsUIInitialized = true;
     }
 
     Entity EditorLayer::GetEntityByCurrentMousePosition()
@@ -800,7 +841,36 @@ namespace Athena
         UI::EndPopup();
     }
 
-    void EditorLayer::DrawCreateScriptModal()
+    void EditorLayer::DrawNewProjectModal()
+    {
+        static String projectName;
+        UI::TextInputWithHint("Project Name", projectName);
+
+        static String projectDir;
+        UI::TextInputWithHint("Project Directory", projectDir);
+
+        UI::ShiftCursorY(10);
+
+        if (ImGui::Button("Close"))
+        {
+            UI::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Create"))
+        {
+            NewProject(projectName, projectDir);
+            projectName.clear();
+            projectDir.clear();
+
+            UI::CloseCurrentPopup();
+        }
+
+        UI::EndPopup();
+    }
+
+    void EditorLayer::DrawNewScriptModal()
     {
         UI::PushFont(UI::Fonts::Default22);
         static String scriptName;
@@ -923,21 +993,13 @@ namespace Athena
 
         switch (event.GetKeyCode())
         {
-            // Scenes Management
         case Keyboard::S:
         {
             if (ctrl && isEdit)
-            {
-                if (m_CurrentScenePath == FilePath())
-                    SaveSceneAs();
-                else
-                    SaveSceneAs(m_CurrentScenePath);
-            }
+                SaveAll();
             break;
         }
-        case Keyboard::N: if (ctrl && isEdit) NewScene(); break;
-        case Keyboard::O: if (ctrl && isEdit) OpenScene(); break;
-            
+
         case Keyboard::F4: if (m_EditorCtx->SceneState == SceneState::Play || m_EditorCtx->SceneState == SceneState::Simulation) OnSceneStop(); break;
         case Keyboard::F5: if (m_EditorCtx->SceneState == SceneState::Edit || m_EditorCtx->SceneState == SceneState::Simulation) OnScenePlay(); break;
         case Keyboard::F6: if (m_EditorCtx->SceneState == SceneState::Edit) OnSceneSimulate(); break;
@@ -1060,5 +1122,57 @@ namespace Athena
         m_EditorScene = newScene;
         m_EditorCtx->ActiveScene = newScene;
         m_EditorCtx->SelectedEntity = {};
+    }
+
+    void EditorLayer::NewProject(const String& name, const FilePath& path)
+    {
+        Project::New(name, path);
+
+        FilePath cmakePath = m_Config.EditorResources / "Scripting/CMakeLists.txt";
+        FilePath genProjectsPath = m_Config.EditorResources / "Scripting/VS2022-GenProjects.bat";
+
+        FileSystem::Copy(cmakePath, Project::GetScriptsDirectory() / "CMakeLists.txt");
+        FileSystem::Copy(genProjectsPath, Project::GetScriptsDirectory() / "VS2022-GenProjects.bat");
+    }
+
+    bool EditorLayer::OpenProject()
+    {
+        FilePath filepath = FileDialogs::OpenFile(TEXT("Athena Project (*.atproj)\0*.atproj\0"));
+        if (filepath.empty())
+            return false;
+
+        OpenProject(filepath);
+        return true;
+    }
+
+    void EditorLayer::OpenProject(const FilePath& path)
+    {
+        if (Project::Load(path))
+        {
+            ScriptEngine::InitProject();
+
+            OpenScene(Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene));
+
+            if (m_IsUIInitialized)
+            {
+                Ref<ContentBrowserPanel> contentBrowser = PanelManager::GetPanel<ContentBrowserPanel>(CONTENT_BORWSER_PANEL_ID);
+                contentBrowser->Refresh();
+            }
+        }
+    }
+
+    void EditorLayer::SaveProject()
+    {
+        Project::SaveActive();
+    }
+
+    void EditorLayer::SaveAll()
+    {
+        SaveProject();
+
+        if (m_CurrentScenePath == FilePath())
+            SaveSceneAs();
+        else
+            SaveSceneAs(m_CurrentScenePath);
     }
 }
