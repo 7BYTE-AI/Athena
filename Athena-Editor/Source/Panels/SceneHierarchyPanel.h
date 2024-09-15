@@ -22,7 +22,7 @@ namespace Athena
 	class SceneHierarchyPanel : public Panel
 	{
 	public:
-		SceneHierarchyPanel(std::string_view name, const Ref<EditorContext>& context);
+		SceneHierarchyPanel(const Ref<EditorContext>& context);
 
 		virtual void OnImGuiRender() override;
 

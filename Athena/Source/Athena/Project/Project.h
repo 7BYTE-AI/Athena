@@ -10,23 +10,28 @@ namespace Athena
 {
 	struct EditorState
 	{
-		UUID SelectedEntity;
+		UUID SelectedEntity = { 0 };
 		FilePath ActiveScene;
 
 		Vector3 CameraPos = Vector3(0);
-		Quaternion CameraRotation = Quaternion(0, 0, 0, 0);
+		Vector2 CameraPitchYaw = Vector2(0, 0);
 		float CameraSpeed = 0.3f;
 	};
 
 	struct ProjectConfig
 	{
+		// General
 		String Name = "UnNamed";
-
 		FilePath StartScene;
 
 		// Scripting
 		FilePath AthenaSourceDirectory;
-		FilePath AthenaBinaryPath;
+		FilePath AthenaBinaryDirectory;
+
+		// Physics
+		uint32 VelocityIterations = 6;
+		uint32 PositionIterations = 2;
+		Vector2 Gravity = { 0, -9.8 };
 
 		EditorState EditorSavedState;
 	};
@@ -50,6 +55,12 @@ namespace Athena
 		{
 			ATN_CORE_ASSERT(s_ActiveProject);
 			return GetAssetDirectory() / path;
+		}
+
+		static FilePath GetRelativeAssetPath(const FilePath& path)
+		{
+			ATN_CORE_ASSERT(s_ActiveProject);
+			return std::filesystem::relative(path, GetAssetDirectory());
 		}
 
 		static FilePath GetScriptsDirectory()

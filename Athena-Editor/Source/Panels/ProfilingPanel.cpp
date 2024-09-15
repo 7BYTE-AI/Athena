@@ -3,14 +3,15 @@
 #include "Athena/Core/Application.h"
 #include "Athena/UI/UI.h"
 #include "Athena/Utils/StringUtils.h"
+#include "Panels/PanelManager.h"
 
 #include <ImGui/imgui.h>
 
 
 namespace Athena
 {
-    ProfilingPanel::ProfilingPanel(std::string_view name, const Ref<EditorContext>& context)
-        : Panel(name, context)
+    ProfilingPanel::ProfilingPanel(const Ref<EditorContext>& context)
+        : Panel(PROFILING_PANEL_ID, context)
     {
 
     }

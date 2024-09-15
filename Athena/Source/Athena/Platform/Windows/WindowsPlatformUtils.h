@@ -10,6 +10,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+#include <shlobj_core.h>
 #include <commdlg.h>
 #include <intrin.h>
 #include <psapi.h>
@@ -35,6 +36,18 @@ namespace Athena
 
 			LocalFree(messageBuffer);
 			return false;
+		}
+
+		static int CALLBACK BrowseDirCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+		{
+			if (uMsg == BFFM_INITIALIZED)
+			{
+				std::string tmp = (const char*)lpData;
+				ATN_CORE_INFO_TAG("Platform", "WinAPI browse directory message: {}", tmp);
+				SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+			}
+
+			return 0;
 		}
 
 		static DWORD CountSetBits(ULONG_PTR bitMask)
@@ -189,6 +202,11 @@ namespace Athena
 		WINAPI_CHECK_LASTERROR();
 	}
 
+	void Platform::OpenInFileExplorer(const FilePath& path)
+	{
+		ShellExecute(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+	}
+
 	void Platform::RunFile(const FilePath& path, const FilePath& workingDir)
 	{
 		WINAPI_SUPPRESS_LAST_ERROR();
@@ -240,54 +258,6 @@ namespace Athena
 		CloseHandle(hProcess);
 		WINAPI_CHECK_LASTERROR();
 		return memUsage;
-	}
-
-
-	FilePath FileDialogs::OpenFile(std::wstring_view filter)
-	{
-		OPENFILENAME ofn;
-		WCHAR szFile[260] = { 0 };
-		ZeroMemory(&ofn, sizeof(OPENFILENAME));
-
-		ofn.lStructSize = sizeof(OPENFILENAME);
-		ofn.hwndOwner = s_Data.WindowHandle;
-		ofn.lpstrFile = szFile;
-		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = filter.data();
-		ofn.nFilterIndex = 1;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-		if (GetOpenFileName(&ofn) == TRUE)
-			return ofn.lpstrFile;
-
-		WINAPI_CHECK_LASTERROR();
-		return {};
-	}
-
-	FilePath FileDialogs::SaveFile(std::wstring_view filter)
-	{
-		OPENFILENAME ofn;
-		WCHAR szFile[260] = { 0 };
-		ZeroMemory(&ofn, sizeof(OPENFILENAME));
-
-		ofn.lStructSize = sizeof(OPENFILENAME);
-		ofn.hwndOwner = s_Data.WindowHandle;
-		ofn.lpstrFile = szFile;
-		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = filter.data();
-		ofn.nFilterIndex = 1;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
-
-		if (GetSaveFileName(&ofn) == TRUE)
-			return ofn.lpstrFile;
-
-		WINAPI_CHECK_LASTERROR();
-		return {};
-	}
-
-	void FileDialogs::OpenInFileExplorer(const FilePath& path)
-	{
-		ShellExecute(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWDEFAULT);
 	}
 
 

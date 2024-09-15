@@ -25,6 +25,7 @@ EXPORTS
 	?ColorEdit4@ImGui@@YA_NPEBDQEAMH@Z
 	?ColorConvertFloat4ToU32@ImGui@@YAIAEBUImVec4@@@Z
 	?ColorConvertU32ToFloat4@ImGui@@YA?AUImVec4@@I@Z
+	?CloseButton@ImGui@@YA_NIAEBUImVec2@@@Z
 	?DragFloat@ImGui@@YA_NPEBDPEAMMMM0H@Z
 	?DragFloat2@ImGui@@YA_NPEBDQEAMMMM0H@Z
 	?DragFloat3@ImGui@@YA_NPEBDQEAMMMM0H@Z

@@ -1,26 +1,17 @@
 #include "Athena/Scene/SceneSerializer.h"
 
 #include "Athena/Core/FileSystem.h"
+#include "Athena/Core/YAMLTypes.h"
 #include "Athena/Asset/TextureImporter.h"
 #include "Athena/Scene/Components.h"
 #include "Athena/Scene/Entity.h"
 
-#if defined(_MSC_VER)
-	#pragma warning (push, 0)
-#endif
-
-#include <yaml-cpp/yaml.h>
-
-#if defined(_MSC_VER)
-	#pragma warning (pop)
-#endif
-
 #include <fstream>
 #include <sstream>
 
+#include <yaml-cpp/yaml.h>
 
-namespace YAML
-{
+
 #define WRITE_SCRIPT_FIELD(nativeType, fieldType)   \
 		case ScriptFieldType::fieldType:		    \
 			output << field.GetValue<nativeType>(); \
@@ -33,178 +24,6 @@ namespace YAML
 			field.SetValue(data);										 \
 			break;														 \
 		}
-
-
-	template <>
-	struct convert<Athena::Vector2>
-	{
-		static Node encode(const Athena::Vector2& vec2)
-		{
-			Node node;
-			node.push_back(vec2.x);
-			node.push_back(vec2.y);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Athena::Vector2& vec2)
-		{
-			if (!node.IsSequence() || node.size() != 2)
-				return false;
-
-			vec2.x = node[0].as<float>();
-			vec2.y = node[1].as<float>();
-			return true;
-		}
-	};
-
-	template <>
-	struct convert<Athena::Vector3>
-	{
-		static Node encode(const Athena::Vector3& vec3)
-		{
-			Node node;
-			node.push_back(vec3.x);
-			node.push_back(vec3.y);
-			node.push_back(vec3.z);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Athena::Vector3& vec3)
-		{
-			if (!node.IsSequence() || node.size() != 3)
-				return false;
-
-			vec3.x = node[0].as<float>();
-			vec3.y = node[1].as<float>();
-			vec3.z = node[2].as<float>();
-			return true;
-		}
-	};
-
-	template <>
-	struct convert<Athena::Vector4>
-	{
-		static Node encode(const Athena::Vector4& vec4)
-		{
-			Node node;
-			node.push_back(vec4.x);
-			node.push_back(vec4.y);
-			node.push_back(vec4.z);
-			node.push_back(vec4.w);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Athena::Vector4& vec4)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-				return false;
-
-			vec4.x = node[0].as<float>();
-			vec4.y = node[1].as<float>();
-			vec4.z = node[2].as<float>();
-			vec4.w = node[3].as<float>();
-			return true;
-		}
-	};
-
-	template <>
-	struct convert<Athena::Quaternion>
-	{
-		static Node encode(const Athena::Quaternion& quat)
-		{
-			Node node;
-			node.push_back(quat.w);
-			node.push_back(quat.x);
-			node.push_back(quat.y);
-			node.push_back(quat.z);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Athena::Quaternion& quat)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-				return false;
-
-			quat.w = node[0].as<float>();
-			quat.x = node[1].as<float>();
-			quat.y = node[2].as<float>();
-			quat.z = node[3].as<float>();
-			return true;
-		}
-	};
-
-	template <>
-	struct convert<Athena::LinearColor>
-	{
-		static Node encode(const Athena::LinearColor& color)
-		{
-			Node node;
-			node.push_back(color.r);
-			node.push_back(color.g);
-			node.push_back(color.b);
-			node.push_back(color.a);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Athena::LinearColor& color)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-				return false;
-
-			color.r = node[0].as<float>();
-			color.g = node[1].as<float>();
-			color.b = node[2].as<float>();
-			color.a = node[3].as<float>();
-			return true;
-		}
-	};
-
-	Emitter& operator<<(Emitter& out, const Athena::Vector2& vec2)
-	{
-		out << Flow;
-		out << BeginSeq << vec2.x << vec2.y << EndSeq;
-
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Athena::Vector3& vec3)
-	{
-		out << Flow;
-		out << BeginSeq << vec3.x << vec3.y << vec3.z << EndSeq;
-
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Athena::Vector4& vec4)
-	{
-		out << Flow;
-		out << BeginSeq << vec4.x << vec4.y << vec4.z << vec4.w << EndSeq;
-
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Athena::Quaternion& quat)
-	{
-		out << Flow;
-		out << BeginSeq << quat.w << quat.x << quat.y << quat.z << EndSeq;
-
-		return out;
-	}
-
-	Emitter& operator<<(Emitter& out, const Athena::LinearColor& color)
-	{
-		out << Flow;
-		out << BeginSeq << color.r << color.g << color.b << color.a << EndSeq;
-
-		return out;
-	}
-}
-
 
 namespace Athena
 {
@@ -273,11 +92,11 @@ namespace Athena
 
 			for (const auto& entityNode : entities)
 			{
-				uint64 uuid = 0;
+				UUID uuid = 0;
 				{
 					const auto& uuidComponentNode = entityNode["IDComponent"];
 					if (uuidComponentNode)
-						uuid = uuidComponentNode["ID"].as<uint64>();
+						uuid = uuidComponentNode["ID"].as<UUID>();
 				}
 
 				String name;
@@ -400,7 +219,7 @@ namespace Athena
 						texCoords[3] = texCoordsNode["3"].as<Vector2>();
 
 						const auto& textureNode = spriteComponentNode["Texture"];
-						const auto& path = FilePath(textureNode.as<String>());
+						const auto& path = textureNode.as<FilePath>();
 						if (!path.empty())
 						{
 							Ref<Texture2D> texture = TextureImporter::Load(path, true);
@@ -435,7 +254,7 @@ namespace Athena
 						auto& text = deserializedEntity.AddComponent<TextComponent>();
 
 						text.Text = textComponentNode["Text"].as<String>();
-						text.Font = Font::Create(textComponentNode["Font"].as<String>());
+						text.Font = Font::Create(textComponentNode["Font"].as<FilePath>());
 						text.Space = (Renderer2DSpace)textComponentNode["Space"].as<int>();
 						text.Color = textComponentNode["Color"].as<LinearColor>();
 						text.MaxWidth = textComponentNode["MaxWidth"].as<float>();
@@ -496,7 +315,7 @@ namespace Athena
 					{
 						auto& meshComp = deserializedEntity.AddComponent<StaticMeshComponent>();
 
-						FilePath path = staticMeshComponentNode["FilePath"].as<String>();
+						FilePath path = staticMeshComponentNode["FilePath"].as<FilePath>();
 
 						meshComp.Mesh = StaticMesh::Create(path);
 						meshComp.Visible = staticMeshComponentNode["Visible"].as<bool>();
@@ -551,7 +370,7 @@ namespace Athena
 
 						envMap->SetResolution(skyLightComponent["Resolution"].as<uint32>());
 						envMap->SetType((EnvironmentMapType)skyLightComponent["Type"].as<uint32>());
-						envMap->SetFilePath(skyLightComponent["FilePath"].as<String>());
+						envMap->SetFilePath(skyLightComponent["FilePath"].as<FilePath>());
 
 						float turbidity = skyLightComponent["Turbidity"].as<float>();
 						float azimuth = skyLightComponent["Azimuth"].as<float>();
@@ -580,7 +399,7 @@ namespace Athena
 					const auto& parentComponentNode = entityNode["ParentComponent"];
 					if (parentComponentNode)
 					{
-						UUID parentID = parentComponentNode["Parent"].as<uint64>();
+						UUID parentID = parentComponentNode["Parent"].as<UUID>();
 						Entity parent = m_Scene->GetEntityByUUID(parentID);
 
 						if (parent)
@@ -624,7 +443,7 @@ namespace Athena
 
 		SerializeComponent<IDComponent>(out, "IDComponent", entity, [](YAML::Emitter& output, const IDComponent& id) 
 			{
-				output << YAML::Key << "ID" << YAML::Value << (uint64)id.ID;
+				output << YAML::Key << "ID" << YAML::Value << id.ID;
 			});
 
 		SerializeComponent<TagComponent>(out, "TagComponent", entity, 
@@ -644,7 +463,7 @@ namespace Athena
 		SerializeComponent<ParentComponent>(out, "ParentComponent", entity,
 			[](YAML::Emitter& output, const ParentComponent& parentCmp)
 			{
-				uint64 parentID = (uint64)parentCmp.Parent.GetComponent<IDComponent>().ID;
+				UUID parentID = parentCmp.Parent.GetComponent<IDComponent>().ID;
 				output << YAML::Key << "Parent" << YAML::Value << parentID;
 			});
 
@@ -720,7 +539,7 @@ namespace Athena
 			{
 				output << YAML::Key << "Space" << YAML::Value << (int)sprite.Space;
 				output << YAML::Key << "Color" << YAML::Value << sprite.Color;
-				output << YAML::Key << "Texture" << YAML::Value << sprite.Texture.GetNativeTexture()->GetFilePath().string();
+				output << YAML::Key << "Texture" << YAML::Value << sprite.Texture.GetNativeTexture()->GetFilePath();
 
 				const auto& texCoords = sprite.Texture.GetTexCoords();
 				output << YAML::Key << "TexCoords" << YAML::Value;
@@ -745,7 +564,7 @@ namespace Athena
 		SerializeComponent<TextComponent>(out, "TextComponent", entity, [](YAML::Emitter& output, const TextComponent& text)
 			{
 				output << YAML::Key << "Text" << YAML::Value << text.Text;
-				output << YAML::Key << "Font" << YAML::Value << text.Font->GetFilePath().string();
+				output << YAML::Key << "Font" << YAML::Value << text.Font->GetFilePath();
 				output << YAML::Key << "Space" << YAML::Value << (int)text.Space;
 				output << YAML::Key << "Color" << YAML::Value << text.Color;
 				output << YAML::Key << "MaxWidth" << YAML::Value << text.MaxWidth;
@@ -791,7 +610,7 @@ namespace Athena
 			[](YAML::Emitter& output, const StaticMeshComponent& meshComponent)
 			{
 				Ref<StaticMesh> mesh = meshComponent.Mesh;
-				output << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath().string();
+				output << YAML::Key << "FilePath" << YAML::Value << mesh->GetFilePath();
 				output << YAML::Key << "Visible" << YAML::Value << meshComponent.Visible;
 			});
 
@@ -824,7 +643,6 @@ namespace Athena
 				output << YAML::Key << "RangeFallOff" << YAML::Value << lightComponent.RangeFallOff;
 			});
 
-
 		SerializeComponent<SkyLightComponent>(out, "SkyLightComponent", entity,
 			[](YAML::Emitter& output, const SkyLightComponent& lightComponent)
 			{
@@ -833,7 +651,7 @@ namespace Athena
 				output << YAML::Key << "LOD" << YAML::Value << lightComponent.LOD;
 				output << YAML::Key << "Resolution" << envMap->GetResolution();
 				output << YAML::Key << "Type" << (int)envMap->GetType();
-				output << YAML::Key << "FilePath" << envMap->GetFilePath().string();
+				output << YAML::Key << "FilePath" << envMap->GetFilePath();
 				output << YAML::Key << "Turbidity" << envMap->GetTurbidity();
 				output << YAML::Key << "Azimuth" << envMap->GetAzimuth();
 				output << YAML::Key << "Inclination" << envMap->GetInclination();

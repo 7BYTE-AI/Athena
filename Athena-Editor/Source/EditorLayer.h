@@ -77,7 +77,7 @@ namespace Athena
 		Ref<SceneRenderer> m_ViewportRenderer;
 		Ref<SceneRenderer2D> m_Renderer2D;
 		Ref<EditorContext> m_EditorCtx;
-		Ref<EditorCamera> m_EditorCamera;
+		Ref<FirstPersonCamera> m_EditorCamera;
 		Ref<ImGuizmoLayer> m_ImGuizmoLayer;
 
 		Ref<Titlebar> m_Titlebar;

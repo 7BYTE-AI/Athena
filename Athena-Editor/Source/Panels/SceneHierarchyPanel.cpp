@@ -1,9 +1,10 @@
 #include "SceneHierarchyPanel.h"
 
-#include "Athena/Core/PlatformUtils.h"
+#include "Athena/Core/FileDialogs.h"
 #include "Athena/Core/FileSystem.h"
 #include "Athena/Asset/TextureImporter.h"
 #include "Athena/Input/Input.h"
+#include "Athena/Project/Project.h"
 #include "Athena/Renderer/Animation.h"
 #include "Athena/Renderer/Material.h"
 #include "Athena/Renderer/Renderer.h"
@@ -12,7 +13,7 @@
 #include "Athena/Scripting/ScriptEngine.h"
 #include "Athena/UI/UI.h"
 #include "Athena/UI/Theme.h"
-
+#include "Panels/PanelManager.h"
 #include "EditorResources.h"
 
 #include <ImGui/imgui.h>
@@ -115,8 +116,8 @@ namespace Athena
 	}
 
 
-	SceneHierarchyPanel::SceneHierarchyPanel(std::string_view name, const Ref<EditorContext>& context)
-		: Panel(name, context)
+	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<EditorContext>& context)
+		: Panel(SCENE_HIERARCHY_PANEL_ID, context)
 	{
 		UI::RegisterEnum("Renderer2DSpace");
 		UI::EnumAdd("Renderer2DSpace", 1, "World Space");
@@ -383,7 +384,7 @@ namespace Athena
 
 			if (UI::PropertyImage(texName.data(), displayTexture, { imageSize, imageSize, }))
 			{
-				FilePath path = FileDialogs::OpenFile(TEXT("Texture\0*.png;*.jpg\0"));
+				FilePath path = FileDialogs::OpenFile("Select Texture", { "Texture files", "*.png *.jpg" }, Project::GetAssetDirectory());
 				if (!path.empty())
 				{
 					texture = TextureImporter::Load(path, texName == "u_Albedo" ? true : false);
@@ -439,7 +440,7 @@ namespace Athena
 			if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
 				ImGui::SetKeyboardFocusHere(0);
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.5f);
-			UI::TextInput(tag, tag);
+			UI::TextInput("TagInputText", tag);
 			if (ImGui::IsItemDeactivatedAfterEdit())
 				m_EditTagComponent = false;
 		}
@@ -648,7 +649,7 @@ namespace Athena
 			ImVec2 cursor = ImGui::GetCursorPos();
 			if (ImGui::Button("Browse"))
 			{
-				FilePath path = FileDialogs::OpenFile(TEXT("Texture \0*.png;*.jpg\0"));
+				FilePath path = FileDialogs::OpenFile("Select Texture", { "Texture files", "*.png *.jpg" }, Project::GetAssetDirectory());
 				if (!path.empty())
 				{
 					sprite.Texture = TextureImporter::Load(path, true);
@@ -696,7 +697,7 @@ namespace Athena
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 10, 4 });
 			if (ImGui::Button(fontName.c_str()))
 			{
-				FilePath filepath = FileDialogs::OpenFile(TEXT("Font (*.ttf)\0*.ttf;*.TTF\0"));
+				FilePath filepath = FileDialogs::OpenFile("Select Font", { "Font files", "*.ttf *.TTF" }, Project::GetAssetDirectory());
 				String ext = filepath.extension().string();
 				if (ext == ".ttf" || ext == ".TTF")
 					text.Font = Font::Create(filepath);
@@ -824,7 +825,7 @@ namespace Athena
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 10, 4 });
 			if (ImGui::Button(name.c_str()))
 			{
-				FilePath filepath = FileDialogs::OpenFile(TEXT("Mesh \0*.fbx;*.gltf;*.obj;*.blend;*.x3d\0"));
+				FilePath filepath = FileDialogs::OpenFile("Select Mesh", { "Mesh files", "*.fbx *.gltf *.obj *.blend *.x3d" }, Project::GetAssetDirectory());
 				String ext = filepath.extension().string();
 				if (!filepath.empty())
 					meshComponent.Mesh = StaticMesh::Create(filepath);
@@ -989,7 +990,7 @@ namespace Athena
 
 				if (ImGui::Button(label.data()))
 				{
-					FilePath filepath = FileDialogs::OpenFile(TEXT("EnvironmentMap (*.hdr)\0*.hdr\0"));
+					FilePath filepath = FileDialogs::OpenFile("Select Environment map", { "HDR files", "*.hdr" }, Project::GetAssetDirectory());
 					if (!filepath.empty())
 						envMap->SetFilePath(filepath);
 				}

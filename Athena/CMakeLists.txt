@@ -28,12 +28,13 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 	"Source/*.h" 
 	"Source/*.cpp" 
 	"ThirdParty/filewatch/FileWatch.h"
-	"ThirdParty/stb_image/stb_image.h"
-	"ThirdParty/stb_image/stb_image_write.h"
-	"ThirdParty/stb_image/stb_image.cpp"
 	"ThirdParty/entt/entt.h"
 	"ThirdParty/ImGuizmo/ImGuizmo.h"
 	"ThirdParty/ImGuizmo/ImGuizmo.cpp"
+	"ThirdParty/portable-file-dialogs/portable-file-dialogs.h"
+	"ThirdParty/stb_image/stb_image.h"
+	"ThirdParty/stb_image/stb_image_write.h"
+	"ThirdParty/stb_image/stb_image.cpp"
 )
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SRC_FILES} )
 

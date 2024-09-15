@@ -1,12 +1,15 @@
 #include "SettingsPanel.h"
 
 #include "Athena/Asset/TextureImporter.h"
+#include "Athena/Core/FileDialogs.h"
+#include "Athena/Project/Project.h"
 #include "Athena/Renderer/SceneRenderer.h"
 #include "Athena/Renderer/Shader.h"
 #include "Athena/Renderer/TextureGenerator.h"
 #include "Athena/Scripting/ScriptEngine.h"
 #include "Athena/UI/UI.h"
 #include "Athena/UI/Theme.h"
+#include "Panels/PanelManager.h"
 #include "EditorResources.h"
 #include "EditorLayer.h"
 
@@ -15,18 +18,18 @@
 
 namespace Athena
 {
-	SettingsPanel::SettingsPanel(std::string_view name, const Ref<EditorContext>& context)
-		: Panel(name, context)
+	SettingsPanel::SettingsPanel(const Ref<EditorContext>& context)
+		: Panel(SETTINGS_PANEL_ID, context)
 	{
 		UI::RegisterEnum("TonemapMode");
 		UI::EnumAdd("TonemapMode", 0, "None");
 		UI::EnumAdd("TonemapMode", 1, "ACES-Filmic");
 		UI::EnumAdd("TonemapMode", 2, "ACES-True");
 
-		UI::RegisterEnum("Antialising");
-		UI::EnumAdd("Antialising", 0, "None");
-		UI::EnumAdd("Antialising", 1, "FXAA");
-		UI::EnumAdd("Antialising", 2, "SMAA");
+		UI::RegisterEnum("Antialiasing");
+		UI::EnumAdd("Antialiasing", 0, "None");
+		UI::EnumAdd("Antialiasing", 1, "FXAA");
+		UI::EnumAdd("Antialiasing", 2, "SMAA");
 
 		UI::RegisterEnum("DebugView");
 		UI::EnumAdd("DebugView", 0, "None");
@@ -210,7 +213,7 @@ namespace Athena
 
 			if (UI::PropertyImage("Dirt Texture", displayTex, { 45.f, 45.f }))
 			{
-				FilePath path = FileDialogs::OpenFile(TEXT("Texture\0*.png;*.jpg\0"));
+				FilePath path = FileDialogs::OpenFile("Select Dirt Texture", { "Texture files", "*.png *.jpg" }, Project::GetAssetDirectory());
 				if (!path.empty())
 				{
 					TextureImportOptions options;

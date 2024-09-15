@@ -6,6 +6,7 @@
 #include "Athena/UI/UI.h"
 #include "Athena/UI/Theme.h"
 
+#include "Panels/PanelManager.h"
 #include "EditorResources.h"
 
 #include <ImGui/imgui.h>
@@ -17,8 +18,8 @@
 
 namespace Athena
 {
-	ContentBrowserPanel::ContentBrowserPanel(std::string_view name, const Ref<EditorContext>& context)
-		: Panel(name, context), m_CurrentNode(nullptr)
+	ContentBrowserPanel::ContentBrowserPanel(const Ref<EditorContext>& context)
+		: Panel(CONTENT_BROWSER_PANEL_ID, context), m_CurrentNode(nullptr)
 	{
 		Refresh();
 	}
@@ -59,7 +60,7 @@ namespace Athena
 		ImGui::PushItemWidth(regionAvail.x * 0.15f);
 
 		String oldString = m_SearchString;
-		UI::TextInputWithHint("Search...", m_SearchString);
+		UI::TextInputWithHint("SearchTextInput", "Search...", m_SearchString);
 
 		if (oldString != m_SearchString && !m_SearchString.empty())
 		{

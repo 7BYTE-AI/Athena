@@ -2,6 +2,7 @@
 
 #include "Athena/Core/Application.h"
 #include "Athena/Core/FileSystem.h"
+#include "Athena/Core/FileDialogs.h"
 #include "Athena/Core/PlatformUtils.h"
 #include "Athena/Asset/TextureImporter.h"
 #include "Athena/ImGui/ImGuiLayer.h"
@@ -22,6 +23,7 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/SettingsPanel.h"
 #include "Panels/ProfilingPanel.h"
+#include "Panels/ProjectSettingsPanel.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ViewportPanel.h"
 
@@ -45,6 +47,8 @@ namespace Athena
         m_EditorCtx->ActiveScene = nullptr;
         m_EditorCtx->SceneState = SceneState::Edit;
         m_EditorCtx->SelectedEntity = {};
+
+        m_EditorCamera = Ref<FirstPersonCamera>::Create(Math::Radians(45.f), 16.f / 9.f, 1.f, 200.f);
 
         if (m_Config.SelectProjectManually)
         {
@@ -76,8 +80,6 @@ namespace Athena
         m_ViewportRenderer->SetOnViewportResizeCallback(
             [this](uint32 width, uint32 height) { m_Renderer2D->OnViewportResize(width, height); });
         
-        m_EditorCamera = Ref<FirstPersonCamera>::Create(Math::Radians(45.f), 16.f / 9.f, 1.f, 200.f);
-
         InitUI();
 
 #if 0
@@ -97,7 +99,7 @@ namespace Athena
     {
         ATN_PROFILE_FUNC();
 
-        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(VIEWPORT_PANEL_ID);
+        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(MAIN_VIEWPORT_PANEL_ID);
 
         const auto& vpDesc = viewportPanel->GetDescription();
         const auto& rendererSize = m_EditorCtx->ActiveScene->GetViewportSize();
@@ -351,7 +353,7 @@ namespace Athena
                 }
             });
 
-        auto viewportPanel = Ref<ViewportPanel>::Create(VIEWPORT_PANEL_ID, m_EditorCtx);
+        auto viewportPanel = Ref<ViewportPanel>::Create(MAIN_VIEWPORT_PANEL_ID, m_EditorCtx);
 
         viewportPanel->SetImGuizmoLayer(m_ImGuizmoLayer);
         viewportPanel->SetViewportRenderer(m_ViewportRenderer);
@@ -462,19 +464,22 @@ namespace Athena
 
         PanelManager::AddPanel(viewportPanel, false);
 
-        auto settingsPanel = Ref<SettingsPanel>::Create(SETTINGS_PANEL_ID, m_EditorCtx);
+        auto settingsPanel = Ref<SettingsPanel>::Create(m_EditorCtx);
         settingsPanel->SetContext(m_ViewportRenderer);
         PanelManager::AddPanel(settingsPanel, Keyboard::I);
 
-        auto sceneHierarchyPanel = Ref<SceneHierarchyPanel>::Create(SCENE_HIERARCHY_PANEL_ID, m_EditorCtx);
+        auto sceneHierarchyPanel = Ref<SceneHierarchyPanel>::Create(m_EditorCtx);
         PanelManager::AddPanel(sceneHierarchyPanel, Keyboard::J);
 
-        auto contentBrowserPanel = Ref<ContentBrowserPanel>::Create(CONTENT_BORWSER_PANEL_ID, m_EditorCtx);
+        auto contentBrowserPanel = Ref<ContentBrowserPanel>::Create(m_EditorCtx);
         PanelManager::AddPanel(contentBrowserPanel, Keyboard::Space);
 
-        auto profilingPanel = Ref<ProfilingPanel>::Create(PROFILING_PANEL_ID, m_EditorCtx);
+        auto profilingPanel = Ref<ProfilingPanel>::Create(m_EditorCtx);
         profilingPanel->SetContext(m_ViewportRenderer);
         PanelManager::AddPanel(profilingPanel, Keyboard::K);
+
+        auto projectSettingsPanel = Ref<ProjectSettingsPanel>::Create(m_EditorCtx);
+        PanelManager::AddPanel(projectSettingsPanel, true, false);
 
         m_IsUIInitialized = true;
     }
@@ -844,10 +849,19 @@ namespace Athena
     void EditorLayer::DrawNewProjectModal()
     {
         static String projectName;
-        UI::TextInputWithHint("Project Name", projectName);
+        UI::TextInputWithHint("ProjectNameTextInput", "Project Name", projectName);
 
         static String projectDir;
-        UI::TextInputWithHint("Project Directory", projectDir);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" ... ").x - 2 * ImGui::GetStyle().FramePadding.x - ImGui::GetStyle().ItemSpacing.x);
+        UI::TextInputWithHint("ProjectDirTextInput", "Project Directory", projectDir);
+
+        ImGui::SameLine();
+        if (ImGui::Button(" ... "))
+        {
+            FilePath path = FileDialogs::OpenDirectory("Select Project Directory", Project::GetProjectDirectory());
+            if (!path.empty())
+                projectDir = path.string();
+        }
 
         UI::ShiftCursorY(10);
 
@@ -874,7 +888,7 @@ namespace Athena
     {
         UI::PushFont(UI::Fonts::Default22);
         static String scriptName;
-        UI::TextInputWithHint("Script Name", scriptName);
+        UI::TextInputWithHint("ScriptNameTextInput", "Script Name", scriptName);
         UI::PopFont();
 
         UI::ShiftCursorY(10);
@@ -902,7 +916,7 @@ namespace Athena
         ATN_PROFILE_FUNC();
 
         auto settingsPanel = PanelManager::GetPanel<SettingsPanel>(SETTINGS_PANEL_ID);
-        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(VIEWPORT_PANEL_ID);
+        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(MAIN_VIEWPORT_PANEL_ID);
 
         const auto& vpDesc = viewportPanel->GetDescription();
 
@@ -924,7 +938,7 @@ namespace Athena
     {
         ATN_PROFILE_FUNC();
 
-        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(VIEWPORT_PANEL_ID);
+        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(MAIN_VIEWPORT_PANEL_ID);
         const auto& vpDesc = viewportPanel->GetDescription();
 
         m_EditorCtx->SceneState = SceneState::Simulation;
@@ -957,7 +971,7 @@ namespace Athena
     {
         ATN_PROFILE_FUNC();
 
-        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(VIEWPORT_PANEL_ID);
+        auto viewportPanel = PanelManager::GetPanel<ViewportPanel>(MAIN_VIEWPORT_PANEL_ID);
         const auto& vpDesc = viewportPanel->GetDescription();
 
         if (m_EditorCtx->SceneState != SceneState::Play && !ImGuizmo::IsUsing())
@@ -1078,7 +1092,7 @@ namespace Athena
         if (m_EditorCtx->SceneState != SceneState::Edit)
             OnSceneStop();
 
-        FilePath filepath = FileDialogs::SaveFile(TEXT("Athena Scene (*atn)\0*.atn\0"));
+        FilePath filepath = FileDialogs::SaveFile("Save Scene", { "Scene files", "*.atn" }, Project::GetAssetDirectory());
         if (!filepath.empty())
             SaveSceneAs(filepath);
         else
@@ -1097,7 +1111,7 @@ namespace Athena
         if (m_EditorCtx->SceneState != SceneState::Edit)
             OnSceneStop();
 
-        FilePath filepath = FileDialogs::OpenFile(TEXT("Athena Scene (*.atn)\0*.atn\0"));
+        FilePath filepath = FileDialogs::OpenFile("Open Scene", { "Scene files", "*.atn" }, Project::GetAssetDirectory());
         if (!filepath.empty())
             OpenScene(filepath);
         else
@@ -1137,7 +1151,7 @@ namespace Athena
 
     bool EditorLayer::OpenProject()
     {
-        FilePath filepath = FileDialogs::OpenFile(TEXT("Athena Project (*.atproj)\0*.atproj\0"));
+        FilePath filepath = FileDialogs::OpenFile("Open Project", { "Project files", "*.atproj" });
         if (filepath.empty())
             return false;
 
@@ -1151,18 +1165,59 @@ namespace Athena
         {
             ScriptEngine::InitProject();
 
-            OpenScene(Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene));
+            const ProjectConfig& config = Project::GetActive()->GetConfig();
+            const EditorState& editorState = config.EditorSavedState;
+
+            FilePath activeScenePath = Project::GetAssetFileSystemPath(editorState.ActiveScene);
+            FilePath startScenePath = Project::GetAssetFileSystemPath(config.StartScene);
+            if (!editorState.ActiveScene.empty() && FileSystem::Exists(activeScenePath))
+            {
+                OpenScene(activeScenePath);
+
+                if (m_EditorCtx->ActiveScene)
+                    m_EditorCtx->SelectedEntity = m_EditorCtx->ActiveScene->GetEntityByUUID(editorState.SelectedEntity);
+                    
+            }
+            else if(!config.StartScene.empty() && FileSystem::Exists(startScenePath))
+            {
+                OpenScene(startScenePath);
+            }
+            
+            m_EditorCtx->EditorSettings.CameraSpeedLevel = editorState.CameraSpeed;
+            m_EditorCamera->SetPosition(editorState.CameraPos);
+            m_EditorCamera->SetPitch(editorState.CameraPitchYaw.x);
+            m_EditorCamera->SetYaw(editorState.CameraPitchYaw.y);
+            m_EditorCamera->RecalculateView();
 
             if (m_IsUIInitialized)
             {
-                Ref<ContentBrowserPanel> contentBrowser = PanelManager::GetPanel<ContentBrowserPanel>(CONTENT_BORWSER_PANEL_ID);
+                Ref<ContentBrowserPanel> contentBrowser = PanelManager::GetPanel<ContentBrowserPanel>(CONTENT_BROWSER_PANEL_ID);
                 contentBrowser->Refresh();
+
+                Ref<ProjectSettingsPanel> projectSettings = PanelManager::GetPanel<ProjectSettingsPanel>(PROJECT_SETTINGS_PANEL_ID);
+                projectSettings->OnProjectUpdate();
             }
         }
     }
 
     void EditorLayer::SaveProject()
     {
+        EditorState& state = Project::GetActive()->GetConfig().EditorSavedState;
+
+        if (m_EditorCtx->SelectedEntity)
+            state.SelectedEntity = m_EditorCtx->SelectedEntity.GetID();
+        else
+            state.SelectedEntity = 0;
+
+        if (m_EditorCtx->ActiveScene)
+            state.ActiveScene = Project::GetRelativeAssetPath(m_CurrentScenePath);
+        else
+            state.ActiveScene = "";
+
+        state.CameraSpeed = m_EditorCtx->EditorSettings.CameraSpeedLevel;
+        state.CameraPos = m_EditorCamera->GetPosition();
+        state.CameraPitchYaw = { m_EditorCamera->GetPitch(), m_EditorCamera->GetYaw() };
+
         Project::SaveActive();
     }
 

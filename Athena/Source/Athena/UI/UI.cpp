@@ -98,41 +98,54 @@ namespace Athena::UI
 		return ImColor::HSV(hue, sat, Math::Min(val * scalar, 1.0f));
 	}
 
-	bool TextInput(const String& label, String& destination, ImGuiInputTextFlags flags)
-	{
-		static char buffer[128];
-		memset(buffer, 0, sizeof(buffer));
-		strcpy_s(buffer, label.c_str());
-		if (ImGui::InputText("##TextInput", buffer, sizeof(buffer), flags))
-		{
-			destination = String(buffer);
-			return true;
-		}
-
-		return false;
-	}
-
-	bool TextInputWithHint(const std::string_view hint, String& destination, ImGuiInputTextFlags flags)
+	bool TextInput(const std::string_view id, String& destination, ImGuiInputTextFlags flags)
 	{
 		static char buffer[128];
 		memset(buffer, 0, sizeof(buffer));
 		strcpy_s(buffer, destination.c_str());
-		if (ImGui::InputTextWithHint("##TextInputWithHint", hint.data(), buffer, sizeof(buffer), flags))
+
+		ImGui::PushID(id.data());
+		if (ImGui::InputText("##TextInput", buffer, sizeof(buffer), flags))
 		{
+			ImGui::PopID();
 			destination = String(buffer);
 			return true;
 		}
 
+		ImGui::PopID();
 		return false;
 	}
 
-	bool InputTextMultiline(std::string_view label, String& dst, ImVec2 size, ImGuiInputTextFlags flags)
+	bool TextInputWithHint(const std::string_view id, const std::string_view hint, String& destination, ImGuiInputTextFlags flags)
+	{
+		static char buffer[128];
+		memset(buffer, 0, sizeof(buffer));
+		strcpy_s(buffer, destination.c_str());
+
+		ImGui::PushID(id.data());
+		if (ImGui::InputTextWithHint("##TextInputWithHint", hint.data(), buffer, sizeof(buffer), flags))
+		{
+			ImGui::PopID();
+			destination = String(buffer);
+			return true;
+		}
+
+		ImGui::PopID();
+		return false;
+	}
+
+	bool InputTextMultiline(std::string_view id, String& dst, ImVec2 size, ImGuiInputTextFlags flags)
 	{
 		if (dst.empty())
 			dst.push_back('\0');
 
 		flags |= ImGuiInputTextFlags_CallbackResize;
-		return ImGui::InputTextMultiline("##TextInput", dst.data(), dst.size(), size, flags, Utils::InputTextResizeCallback, (void*)&dst);
+
+		ImGui::PushID(id.data());
+		bool result = ImGui::InputTextMultiline("##TextInput", dst.data(), dst.size(), size, flags, Utils::InputTextResizeCallback, (void*)&dst);
+		ImGui::PopID();
+
+		return result;
 	}
 
 	bool TreeNode(std::string_view label, bool defaultOpen, bool nested)
@@ -254,6 +267,19 @@ namespace Athena::UI
 		ImGui::PushID(label.data());
 		bool active = ImGui::SliderFloat("##Property", v, min, max, format, flags);
 		ImGui::PopID();
+
+		return active;
+	}
+
+	bool PropertySlider(std::string_view label, int* v, int min, int max, const char* format, ImGuiSliderFlags flags)
+	{
+		float height = ImGui::GetFrameHeight();
+		PropertyRow(label, height);
+
+		ImGui::PushID(label.data());
+		bool active = ImGui::SliderInt("##Property", v, min, max, format, flags);
+		ImGui::PopID();
+
 		return active;
 	}
 

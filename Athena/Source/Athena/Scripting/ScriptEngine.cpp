@@ -464,11 +464,16 @@ namespace Athena
 			return;
 		}
 
-		// TODO: Projects
 		String configSource = FileSystem::ReadFile(configTemplatePath);
 		Utils::ReplaceAll(configSource, "<REPLACE_PROJECT_NAME>", "Sandbox");
-		Utils::ReplaceAll(configSource, "<REPLACE_ATHENA_SOURCE_DIR>", "${CMAKE_SOURCE_DIR}/../../..");
-		Utils::ReplaceAll(configSource, "<REPLACE_ATHENA_BINARY_DIR>", "${CMAKE_SOURCE_DIR}/../../../Build/Binaries/Athena");
+
+		String athenaSourceDir = Project::GetActive()->GetConfig().AthenaSourceDirectory.string();
+		athenaSourceDir.insert(0, "${CMAKE_SOURCE_DIR}/");
+		Utils::ReplaceAll(configSource, "<REPLACE_ATHENA_SOURCE_DIR>", athenaSourceDir);
+
+		String athenaBinaryDir = Project::GetActive()->GetConfig().AthenaBinaryDirectory.string();
+		athenaBinaryDir.insert(0, "${CMAKE_SOURCE_DIR}/");
+		Utils::ReplaceAll(configSource, "<REPLACE_ATHENA_BINARY_DIR>", athenaBinaryDir);
 
 #ifdef ATN_DEBUG
 		Utils::ReplaceAll(configSource, "<REPLACE_USE_DEBUG_RUNTIME_LIBS>", "ON");
@@ -519,7 +524,7 @@ namespace Athena
 		{
 			String headerSource = FileSystem::ReadFile(headerTemplate);
 			Utils::ReplaceAll(headerSource, "ClassName", name);
-			Utils::ReplaceAll(headerSource, "NamespaceName", "Sandbox");	// TODO: Projects
+			Utils::ReplaceAll(headerSource, "NamespaceName", Project::GetActive()->GetConfig().Name);
 			FilePath headerPath = srcPath / fmt::format("{}.h", name);
 
 			if (!FileSystem::WriteFile(headerPath, headerSource.c_str(), headerSource.size()))
@@ -529,7 +534,7 @@ namespace Athena
 		{
 			String cppSource = FileSystem::ReadFile(cppTemplate);
 			Utils::ReplaceAll(cppSource, "ClassName", name);
-			Utils::ReplaceAll(cppSource, "NamespaceName", "Sandbox");	// TODO: Projects
+			Utils::ReplaceAll(cppSource, "NamespaceName", Project::GetActive()->GetConfig().Name);
 			FilePath cppPath = srcPath / fmt::format("{}.cpp", name);
 
 			if(!FileSystem::WriteFile(cppPath, cppSource.c_str(), cppSource.size()))
@@ -541,9 +546,7 @@ namespace Athena
 
 	void ScriptEngine::OpenInVisualStudio()
 	{
-		const String projectName = "Sandbox"; // Temporary
-
-		FilePath solutionName = fmt::format("{}.sln", projectName);
+		FilePath solutionName = fmt::format("{}.sln", Project::GetActive()->GetConfig().Name);
 		FilePath solutionPath = Project::GetScriptsDirectory() / "Build/Projects" / solutionName;
 
 		if (!FileSystem::Exists(solutionPath))

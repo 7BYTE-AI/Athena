@@ -118,6 +118,8 @@ namespace Athena
 
 		virtual CameraInfo GetCameraInfo() const override;
 
+		Quaternion GetOrientation() const;
+
 	protected:
 		void RecalculateProjection();
 		Vector2 UpdateMousePosition();
@@ -125,7 +127,6 @@ namespace Athena
 		Vector3 GetUpDirection() const;
 		Vector3 GetRightDirection() const;
 		Vector3 GetForwardDirection() const;
-		Quaternion GetOrientation() const;
 
 	private:
 		float m_FOV = Math::PI<float>() / 2.f;
@@ -183,10 +184,11 @@ namespace Athena
 		virtual void OnEvent(Event& event) override;
 
 		virtual Vector3 GetPosition() const override { return m_Position; }
+		void SetPosition(Vector3 pos) { m_Position = pos; }
 
-	private:
 		void RecalculateView();
 
+	private:
 		bool OnMouseScroll(MouseScrolledEvent& event);
 		float MoveSpeed() const;
 		float RotationSpeed() const;

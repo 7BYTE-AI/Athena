@@ -5,10 +5,9 @@
 #include "Athena/Renderer/Material.h"
 #include "Athena/Renderer/SceneRenderer2D.h"
 #include "Athena/Renderer/SceneRenderer.h"
-
 #include "Athena/Scene/Entity.h"
 #include "Athena/Scene/Components.h"
-
+#include "Athena/Project/Project.h"
 #include "Athena/Scripting/ScriptEngine.h"
 
 #ifdef _MSC_VER
@@ -470,7 +469,9 @@ namespace Athena
 	{
 		ATN_PROFILE_FUNC();
 
-		m_PhysicsWorld = std::make_unique<b2World>(b2Vec2(0, -9.8f));
+		const Vector2 gravity = Project::GetActive()->GetConfig().Gravity;
+
+		m_PhysicsWorld = std::make_unique<b2World>(b2Vec2(gravity.x, gravity.y));
 		m_Registry.view<Rigidbody2DComponent>().each([this](auto entityID, auto& rb2d)
 		{
 			Entity entity = Entity(entityID, this);
@@ -524,8 +525,8 @@ namespace Athena
 	{
 		ATN_PROFILE_FUNC();
 
-		constexpr uint32 velocityIterations = 6;
-		constexpr uint32 positionIterations = 2;
+		const uint32 velocityIterations = Project::GetActive()->GetConfig().VelocityIterations;
+		const uint32 positionIterations = Project::GetActive()->GetConfig().PositionIterations;
 		m_PhysicsWorld->Step(frameTime.AsSeconds(), velocityIterations, positionIterations);
 
 		auto rigidBodies2D = GetAllEntitiesWith<Rigidbody2DComponent, WorldTransformComponent, TransformComponent>();
