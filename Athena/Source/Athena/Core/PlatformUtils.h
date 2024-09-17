@@ -27,6 +27,8 @@ namespace Athena
 
 		static void RunFile(const FilePath& path, const FilePath& workingDir);
 
+		static void CreateAndSyncConsole(uint32 consoleLines = 1000);
+
 		// In milliseconds
 		static double GetHighPrecisionTime();
 		// In bytes

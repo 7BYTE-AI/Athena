@@ -10,7 +10,7 @@ namespace Athena
 	VulkanTextureView::VulkanTextureView(const Ref<Texture>& texture, const TextureViewCreateInfo& info)
 	{
 		m_Info = info;
-		m_Texture = texture.Raw();
+		m_Texture = texture;
 		m_Image = Vulkan::GetImage(texture);
 
 		if (m_Info.Name.empty())

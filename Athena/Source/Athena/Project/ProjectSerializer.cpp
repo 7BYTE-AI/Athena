@@ -16,7 +16,7 @@ namespace Athena
 	{
 		const auto& config = m_Project->GetConfig();
 
-		YAML::Emitter out;
+ 		YAML::Emitter out;
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << "Project" << YAML::Value << YAML::BeginMap;

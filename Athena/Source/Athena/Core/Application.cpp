@@ -23,7 +23,7 @@ namespace Athena
 		if (m_Config.CleanCacheOnLoad)
 			FileSystem::Remove(m_Config.EngineResourcesPath / "Cache");
 
-		Log::Init(m_Config.EnableConsole);
+		Log::Init(appinfo.LogConfig);
 		Renderer::Init(appinfo.RendererConfig);
 		CreateMainWindow(appinfo.WindowInfo);
 		Platform::Init();

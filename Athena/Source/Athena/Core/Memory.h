@@ -235,6 +235,154 @@ namespace Athena
 
 
 	template <typename T>
+	class WeakRef
+	{
+	public:
+		WeakRef()
+			: m_Object(nullptr)
+		{
+
+		}
+
+		template <typename U>
+		WeakRef(const Ref<U>& other)
+			: m_Object(other.Raw())
+		{
+
+		}
+
+		WeakRef(std::nullptr_t)
+			: m_Object(nullptr)
+		{
+
+		}
+
+		WeakRef(const WeakRef& other)
+			: m_Object(other.Raw())
+		{
+			
+		}
+
+		template <typename U>
+		WeakRef(const WeakRef<U>& other)
+			: m_Object(static_cast<T*>(other.Raw()))
+		{
+		
+		}
+
+		WeakRef(WeakRef&& other) noexcept
+		{
+			m_Object = other.Raw();
+			other.m_Object = nullptr;
+		}
+
+		template <typename U>
+		WeakRef(WeakRef<U>&& other) noexcept
+		{
+			m_Object = static_cast<T*>(other.Raw());
+			other.m_Object = nullptr;
+		}
+
+		WeakRef& operator=(const WeakRef& other)
+		{
+			if (m_Object == other.Raw())
+				return *this;
+
+			m_Object = other.Raw();
+			return *this;
+		}
+
+		template <typename U>
+		WeakRef<T>& operator=(const WeakRef<U>& other)
+		{
+			if (m_Object == other.Raw())
+				return *this;
+
+			m_Object = static_cast<T*>(other.Raw());
+			return *this;
+		}
+
+		WeakRef& operator=(WeakRef&& other) noexcept
+		{
+			if (m_Object == other.Raw())
+				return *this;
+
+			m_Object = other.Raw();
+			other.m_Object = nullptr;
+
+			return *this;
+		}
+
+		template <typename U>
+		WeakRef<T>& operator=(WeakRef<U>&& other) noexcept
+		{
+			if (m_Object == other.Raw())
+				return *this;
+
+			m_Object = static_cast<T*>(other.Raw());
+			other.m_Object = nullptr;
+
+			return *this;
+		}
+
+		WeakRef& operator=(std::nullptr_t)
+		{
+			m_Object = nullptr;
+			return *this;
+		}
+
+		T* Raw() const
+		{
+			return m_Object;
+		}
+
+		template <typename U>
+		WeakRef<U> As() const
+		{
+			return WeakRef<U>(static_cast<U*>(m_Object));
+		}
+
+		explicit operator bool() const
+		{
+			return (bool)m_Object;
+		}
+
+		T& operator*() const
+		{
+			return *m_Object;
+		}
+
+		T* operator->() const
+		{
+			return Raw();
+		}
+
+		bool operator==(const WeakRef& other) const
+		{
+			return m_Object == other.Raw();
+		}
+
+		bool operator!=(const WeakRef& other) const
+		{
+			return m_Object != other.Raw();
+		}
+
+		bool operator==(std::nullptr_t) const
+		{
+			return m_Object == nullptr;
+		}
+
+		bool operator!=(std::nullptr_t) const
+		{
+			return m_Object != nullptr;
+		}
+
+	private:
+		T* m_Object;
+	};
+
+
+	template <typename T>
 	class Scope
 	{
 	public:

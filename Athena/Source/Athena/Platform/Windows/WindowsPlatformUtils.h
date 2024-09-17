@@ -10,6 +10,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+#include <fcntl.h>
+#include <io.h>
 #include <shlobj_core.h>
 #include <commdlg.h>
 #include <intrin.h>
@@ -212,6 +214,37 @@ namespace Athena
 		WINAPI_SUPPRESS_LAST_ERROR();
 		ShellExecute(NULL, L"open", path.c_str(), NULL, workingDir.c_str(), SW_SHOWDEFAULT);
 		WINAPI_CHECK_LASTERROR();
+	}
+
+	void Platform::CreateAndSyncConsole(uint32 consoleLines)
+	{
+		int hConHandle;
+		__int64 lStdHandle;
+		CONSOLE_SCREEN_BUFFER_INFO coninfo;
+		FILE* fp;
+
+		AllocConsole();
+
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+
+		coninfo.dwSize.Y = consoleLines;
+		SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+
+		lStdHandle = reinterpret_cast<__int64>(GetStdHandle(STD_OUTPUT_HANDLE));
+		hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+		fp = _fdopen(hConHandle, "w");
+		*stdout = *fp;
+		setvbuf(stdout, NULL, _IONBF, 0);
+
+		std::ios::sync_with_stdio();
+
+		String name = Application::Get().GetConfig().Name + " Logger";
+		std::wstring wname = FilePath(name).wstring();
+		SetConsoleTitle(wname.c_str());
+
+		HWND consoleHWND = FindWindow(NULL, wname.c_str());
+		if(consoleHWND)
+			SetParent(consoleHWND, s_Data.WindowHandle);
 	}
 
 	double Platform::GetHighPrecisionTime()

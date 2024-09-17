@@ -19,7 +19,6 @@ namespace Athena
 	{
 		String Name = "";
 		bool EnableImGui = true;
-		bool EnableConsole = true;
 		FilePath WorkingDirectory = FilePath();
 		FilePath EngineResourcesPath = FilePath();
 		bool CleanCacheOnLoad = false;
@@ -28,6 +27,7 @@ namespace Athena
 	struct ApplicationCreateInfo
 	{
 		AppConfig AppConfig;
+		LogConfig LogConfig;
 		RendererConfig RendererConfig;
 		ScriptConfig ScriptConfig;
 		WindowCreateInfo WindowInfo;

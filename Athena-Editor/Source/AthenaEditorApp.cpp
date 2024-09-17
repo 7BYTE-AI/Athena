@@ -28,10 +28,12 @@ namespace Athena
 
 		appinfo.AppConfig.Name = "Athena Editor";
 		appinfo.AppConfig.EnableImGui = true;
-		appinfo.AppConfig.EnableConsole = true;
 		appinfo.AppConfig.WorkingDirectory = "";
 		appinfo.AppConfig.EngineResourcesPath = "../Athena/EngineResources";
 		appinfo.AppConfig.CleanCacheOnLoad = false;
+
+		appinfo.LogConfig.EnableConsole = true;
+		appinfo.LogConfig.FileLocation = "Sandbox.log";
 
 		appinfo.RendererConfig.API = Renderer::API::Vulkan;
 		appinfo.RendererConfig.MaxFramesInFlight = 3;

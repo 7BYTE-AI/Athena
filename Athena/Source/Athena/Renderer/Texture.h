@@ -147,11 +147,11 @@ namespace Athena
 
 		virtual const String& GetName() const override { return m_Info.Name; }
 
-		Texture* GetTexture() const { return m_Texture; }
+		WeakRef<Texture> GetTexture() const { return m_Texture; }
 		const TextureViewCreateInfo& GetInfo() const { return m_Info; }
 
 	protected:
-		Texture* m_Texture;	// TODO: use WeakRef
+		WeakRef<Texture> m_Texture;
 		TextureViewCreateInfo m_Info;
 	};
 

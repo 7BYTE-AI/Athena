@@ -58,6 +58,7 @@ EXPORTS
 	?InputTextWithHint@ImGui@@YA_NPEBD0PEAD_KHP6AHPEAUImGuiInputTextCallbackData@@@ZPEAX@Z
 	?IsWindowFocused@ImGui@@YA_NH@Z
 	?IsWindowHovered@ImGui@@YA_NH@Z	
+	?LoadIniSettingsFromDisk@ImGui@@YAXPEBD@Z
 	?MenuItem@ImGui@@YA_NPEBD0_N1@Z
 	?Selectable@ImGui@@YA_NPEBDPEA_NHAEBUImVec2@@@Z
 	?SetDragDropPayload@ImGui@@YA_NPEBDPEBX_KH@Z

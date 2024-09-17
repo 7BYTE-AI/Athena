@@ -17,6 +17,12 @@
 
 namespace Athena
 {
+	struct LogConfig
+	{
+		bool EnableConsole = true;
+		FilePath FileLocation;	// Relative to working dir
+	};
+
 	class Log
 	{
 	public:
@@ -31,7 +37,7 @@ namespace Athena
 		};
 
 	public:
-		static void Init(bool createConsole);
+		static void Init(const LogConfig& config);
 
 		template <typename... Args>
 		static void Message(Type type, Level level, std::string_view tag, Args&&... args);

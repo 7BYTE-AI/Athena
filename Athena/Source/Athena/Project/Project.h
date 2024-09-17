@@ -47,26 +47,27 @@ namespace Athena
 
 		static FilePath GetAssetDirectory()
 		{
-			ATN_CORE_ASSERT(s_ActiveProject);
 			return GetProjectDirectory() / "Assets";
 		}
 
 		static FilePath GetAssetFileSystemPath(const FilePath& path)
 		{
-			ATN_CORE_ASSERT(s_ActiveProject);
 			return GetAssetDirectory() / path;
 		}
 
 		static FilePath GetRelativeAssetPath(const FilePath& path)
 		{
-			ATN_CORE_ASSERT(s_ActiveProject);
 			return std::filesystem::relative(path, GetAssetDirectory());
 		}
 
 		static FilePath GetScriptsDirectory()
 		{
-			ATN_CORE_ASSERT(s_ActiveProject);
 			return GetProjectDirectory() / "Scripts";
+		}
+
+		static FilePath GetLogsDirectory()
+		{
+			return GetProjectDirectory() / "Logs";
 		}
 
 		static FilePath GetScriptsBinaryPath()

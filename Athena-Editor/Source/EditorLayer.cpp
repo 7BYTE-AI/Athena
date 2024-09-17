@@ -231,6 +231,10 @@ namespace Athena
         Application::Get().GetImGuiLayer()->BlockEvents(false);
         Application::Get().GetWindow().SetTitlebarHitTestCallback([this]() { return m_Titlebar->IsHovered(); });
 
+        FilePath fimguiIni = Project::GetProjectDirectory() / "imgui.ini";
+        static String imguiIni = fimguiIni.string();
+        ImGui::GetIO().IniFilename = imguiIni.c_str();
+
         m_ImGuizmoLayer = Ref<ImGuizmoLayer>::Create(m_EditorCtx, m_EditorCamera);
 
         UI::RegisterPopup("About", true);
