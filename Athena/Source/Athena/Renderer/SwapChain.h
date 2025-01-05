@@ -5,7 +5,7 @@
 
 namespace Athena
 {
-	class ATHENA_API SwapChain : public RefCounted
+	class ATHENA_API SwapChain
 	{
 	public:
 		static Ref<SwapChain> Create(void* windowHandle, bool vsync = false);

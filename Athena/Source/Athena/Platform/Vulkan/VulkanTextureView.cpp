@@ -7,7 +7,7 @@
 
 namespace Athena
 {
-	VulkanTextureView::VulkanTextureView(const Ref<Texture>& texture, const TextureViewCreateInfo& info)
+	VulkanTextureView::VulkanTextureView(Texture* texture, const TextureViewCreateInfo& info)
 	{
 		m_Info = info;
 		m_Texture = texture;

@@ -25,7 +25,7 @@ namespace Athena
 		return Math::Floor(Math::Log2(Math::Max<float>(GetWidth(), GetHeight()))) + 1;
 	}
 
-	Ref<TextureView> TextureView::Create(const Ref<Texture>& texture, const TextureViewCreateInfo& info)
+	Ref<TextureView> TextureView::Create(Texture* texture, const TextureViewCreateInfo& info)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -76,7 +76,7 @@ namespace Athena
 		if (m_TextureViews.contains(info))
 			return m_TextureViews.at(info);
 
-		m_TextureViews[info] = TextureView::Create(Ref(this), info);
+		m_TextureViews[info] = TextureView::Create(this, info);
 		return m_TextureViews.at(info);
 	}
 

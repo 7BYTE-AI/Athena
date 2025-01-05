@@ -61,7 +61,7 @@ namespace Athena
 		LinearColor DebugColor = LinearColor(0.f, 0.f, 0.f, 0.f);
 	};
 
-	class ATHENA_API RenderPass: public RefCounted
+	class ATHENA_API RenderPass
 	{
 	public:
 		static Ref<RenderPass> Create(const RenderPassCreateInfo& info);

@@ -26,9 +26,6 @@
 #endif
 
 
-#include "Memory.h"
-#include "Profile.h"
-
 #include <string>
 #include <filesystem>
 
@@ -108,3 +105,6 @@ namespace Athena
 	using String = ::std::string; // string type
 	using FilePath = ::std::filesystem::path; // filepath type
 }
+
+#include "Memory.h"
+#include "Profile.h"

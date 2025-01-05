@@ -17,7 +17,7 @@ namespace Athena
 		RenderCommandBufferUsage Usage;
 	};
 
-	class ATHENA_API RenderCommandBuffer : public RefCounted
+	class ATHENA_API RenderCommandBuffer
 	{
 	public:
 		static Ref<RenderCommandBuffer> Create(const RenderCommandBufferCreateInfo& info);

@@ -18,7 +18,7 @@ namespace Athena
 	class EditorCamera;
 
 
-	class ImGuizmoLayer : public RefCounted
+	class ImGuizmoLayer
 	{
 	public:
 		friend class ViewportPanel;

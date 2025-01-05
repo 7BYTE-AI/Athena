@@ -259,7 +259,7 @@ namespace Athena
 			VkImageView imageView = view.As<VulkanTextureView>()->GetVulkanImageView();
 
 			// All instances of texture has been deleted except one in texture map
-			if (view->GetCount() == 1 || imageView == VK_NULL_HANDLE)
+			if (view.GetCount() == 1 || imageView == VK_NULL_HANDLE)
 			{
 				RemoveDescriptorSet(info.Set);
 				viewsToRemove.push_back(view);
@@ -289,7 +289,7 @@ namespace Athena
 			VkImageView imageView = texture.As<VulkanTexture2D>()->GetVulkanImageView();
 
 			// All instances of texture has been deleted except one in texture map
-			if (texture->GetCount() == 1 || imageView == VK_NULL_HANDLE)
+			if (texture.GetCount() == 1 || imageView == VK_NULL_HANDLE)
 			{
 				RemoveDescriptorSet(info.Set);
 				texturesToRemove.push_back(texture);

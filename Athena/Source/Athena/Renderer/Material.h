@@ -16,7 +16,7 @@ namespace Athena
 		CAST_SHADOWS = 1
 	};
 
-	class ATHENA_API Material : public RefCounted
+	class ATHENA_API Material
 	{
 	public:
 		static Ref<Material> Create(const Ref<Shader>& shader, const String& name);
@@ -109,7 +109,7 @@ namespace Athena
 	}
 
 
-	class ATHENA_API MaterialTable : public RefCounted
+	class ATHENA_API MaterialTable
 	{
 	public:
 		Ref<Material> Get(const String& name) const;

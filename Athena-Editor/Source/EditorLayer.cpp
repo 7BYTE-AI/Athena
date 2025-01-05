@@ -81,10 +81,6 @@ namespace Athena
             [this](uint32 width, uint32 height) { m_Renderer2D->OnViewportResize(width, height); });
         
         InitUI();
-
-#if 0
-        OpenScene("Assets/Scenes/Default.atn");
-#endif
     }
 
     void EditorLayer::OnDetach()

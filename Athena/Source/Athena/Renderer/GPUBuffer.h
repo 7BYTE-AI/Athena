@@ -153,7 +153,7 @@ namespace Athena
 		BufferMemoryFlags Flags = BufferMemoryFlags::GPU_ONLY;
 	};
 
-	class ATHENA_API IndexBuffer : public RefCounted
+	class ATHENA_API IndexBuffer
 	{
 	public:
 		static Ref<IndexBuffer> Create(const IndexBufferCreateInfo& info);
@@ -180,7 +180,7 @@ namespace Athena
 		BufferMemoryFlags Flags = BufferMemoryFlags::GPU_ONLY;
 	};
 
-	class ATHENA_API VertexBuffer : public RefCounted
+	class ATHENA_API VertexBuffer
 	{
 	public:
 		static Ref<VertexBuffer> Create(const VertexBufferCreateInfo& info);

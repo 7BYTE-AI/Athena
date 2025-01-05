@@ -9,7 +9,7 @@
 
 namespace Athena
 {
-	class Titlebar : public RefCounted
+	class Titlebar
 	{
 	public:
 		Titlebar(const Ref<EditorContext>& editorCtx);

@@ -8,7 +8,7 @@ namespace Athena
 {
 	class FontGeometry;
 
-	class ATHENA_API Font: public RefCounted
+	class ATHENA_API Font
 	{
 	public:
 		static bool Init();

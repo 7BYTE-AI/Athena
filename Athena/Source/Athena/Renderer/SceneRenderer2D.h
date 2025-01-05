@@ -100,7 +100,7 @@ namespace Athena
 	};
 
 
-	class ATHENA_API SceneRenderer2D : public RefCounted
+	class ATHENA_API SceneRenderer2D
 	{
 	public:
 		static Ref<SceneRenderer2D> Create(const Ref<RenderPass>& renderPass);

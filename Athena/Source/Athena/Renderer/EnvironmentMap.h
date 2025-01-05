@@ -15,7 +15,7 @@ namespace Athena
 		PREETHAM,
 	};
 
-	class ATHENA_API EnvironmentMap : public RefCounted
+	class ATHENA_API EnvironmentMap
 	{
 	public:
 		static Ref<EnvironmentMap> Create(uint32 resolution);

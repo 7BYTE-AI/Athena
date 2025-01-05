@@ -12,7 +12,7 @@ namespace Athena
 	class VulkanTextureView : public TextureView
 	{
 	public:
-		VulkanTextureView(const Ref<Texture>& texture, const TextureViewCreateInfo& info);
+		VulkanTextureView(Texture* texture, const TextureViewCreateInfo& info);
 		~VulkanTextureView();
 
 		virtual RenderResourceType GetResourceType() const override { return m_ResourceType; }

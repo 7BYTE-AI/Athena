@@ -8,7 +8,7 @@
 
 namespace Athena
 {
-	class ATHENA_API Layer : public RefCounted
+	class ATHENA_API Layer
 	{
 	public:
 		Layer(const String& name = "Layer")

@@ -20,7 +20,7 @@ namespace Athena
 		Ref<ComputePass> InputComputePass;
 	};
 
-	class ATHENA_API ComputePass: public RefCounted
+	class ATHENA_API ComputePass
 	{
 	public:
 		static Ref<ComputePass> Create(const ComputePassCreateInfo& info);

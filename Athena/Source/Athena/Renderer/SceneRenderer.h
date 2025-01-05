@@ -229,7 +229,7 @@ namespace Athena
 	using Render2DCallback = std::function<void()>;
 	using OnViewportResizeCallback = std::function<void(uint32, uint32)>;
 
-	class ATHENA_API SceneRenderer : public RefCounted
+	class ATHENA_API SceneRenderer
 	{
 	public:
 		static Ref<SceneRenderer> Create();

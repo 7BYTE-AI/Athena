@@ -57,7 +57,7 @@ namespace Athena
 	};
 
 
-	class VulkanAllocator : public RefCounted
+	class VulkanAllocator
 	{
 	public:
 		VulkanAllocator(uint32 vulkanVersion);
@@ -85,7 +85,7 @@ namespace Athena
 		std::unordered_map<TextureSamplerCreateInfo, VulkanSamplerAllocation> m_SamplersMap;
 	};
 
-	class DescriptorSetAllocator : public RefCounted
+	class DescriptorSetAllocator
 	{
 	public:
 		inline static std::vector<std::pair<VkDescriptorType, float>> s_PoolSizes =

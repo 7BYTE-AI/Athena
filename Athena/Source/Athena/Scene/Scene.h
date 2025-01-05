@@ -32,7 +32,7 @@ namespace Athena
 	class WorldTransformComponent;
 
 
-	class ATHENA_API Scene : public RefCounted
+	class ATHENA_API Scene
 	{
 	public:
 		friend class ATHENA_API Entity;

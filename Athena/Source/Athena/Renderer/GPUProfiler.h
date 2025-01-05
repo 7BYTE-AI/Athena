@@ -30,7 +30,7 @@ namespace Athena
 
 
 	// Returns query results with FramesInFlight delay
-	class ATHENA_API GPUProfiler : public RefCounted
+	class ATHENA_API GPUProfiler
 	{
 	public:
 		static Ref<GPUProfiler> Create(const GPUProfilerCreateInfo& info);

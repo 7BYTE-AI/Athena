@@ -397,6 +397,21 @@ namespace Athena::Vulkan
         return nullptr;
     }
 
+    inline Ref<VulkanImage> GetImage(Texture* texture)
+    {
+        if (texture->GetType() == TextureType::TEXTURE_2D)
+        {
+            return reinterpret_cast<VulkanTexture2D*>(texture)->GetImage();
+        }
+        else if (texture->GetType() == TextureType::TEXTURE_CUBE)
+        {
+            return reinterpret_cast<VulkanTextureCube*>(texture)->GetImage();
+        }
+
+        ATN_CORE_ASSERT(false);
+        return nullptr;
+    }
+
     inline VkCommandBuffer BeginSingleTimeCommands()
     {
         VkCommandBufferAllocateInfo cmdBufAllocInfo = {};

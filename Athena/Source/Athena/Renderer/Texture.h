@@ -140,18 +140,18 @@ namespace Athena
 	class ATHENA_API TextureView : public RenderResource
 	{
 	public:
-		static Ref<TextureView> Create(const Ref<Texture>& texture, const TextureViewCreateInfo& info);
+		static Ref<TextureView> Create(Texture* texture, const TextureViewCreateInfo& info);
 		virtual ~TextureView() = default;
 
 		virtual void Invalidate() = 0;
 
 		virtual const String& GetName() const override { return m_Info.Name; }
 
-		WeakRef<Texture> GetTexture() const { return m_Texture; }
+		Texture* GetTexture() const { return m_Texture; }
 		const TextureViewCreateInfo& GetInfo() const { return m_Info; }
 
 	protected:
-		WeakRef<Texture> m_Texture;
+		Texture* m_Texture;
 		TextureViewCreateInfo m_Info;
 	};
 

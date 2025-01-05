@@ -6,7 +6,7 @@
 
 namespace Athena
 {
-	class Panel : public RefCounted
+	class Panel
 	{
 	public:
 		Panel(std::string_view name, Ref<EditorContext> context)

@@ -66,7 +66,7 @@ namespace Athena
 		Ref<VertexBuffer> VertexBuffer;
 	};
 
-	class ATHENA_API StaticMesh : public RefCounted
+	class ATHENA_API StaticMesh
 	{
 	public:
 		static Ref<StaticMesh> Create(const FilePath& path);
